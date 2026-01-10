@@ -416,12 +416,21 @@ trigger:
   - trigger: time_pattern
     minutes: "/1"
 
-# PODMÍNKA: Alarm zapnutý + teplota mimo práh
+# PODMÍNKA: Alarm zapnutý + teplota mimo práh + cooldown uplynul
 condition:
   - condition: template
     value_template: "{{ alarm_enabled }}"
   - condition: template
     value_template: "{{ alarm_sensors != '' }}"
+  # Cooldown: Poslední alarm byl před >= cooldown_minutes
+  - condition: template
+    value_template: >
+      {% set last_trigger = state_attr(this.entity_id, 'last_triggered') %}
+      {% if last_trigger == none %}
+        true
+      {% else %}
+        {{ (as_timestamp(now()) - as_timestamp(last_trigger)) >= (cooldown_minutes * 60) }}
+      {% endif %}
 
 action:
   # Počkat minimum_duration a zkontrolovat znovu
@@ -566,9 +575,5 @@ action:
       - conditions: "{{ true }}"
         sequence: !input actions
 
-  # Cooldown
-  - delay:
-      minutes: "{{ cooldown_minutes }}"
-
-mode: single
+mode: restart
 max_exceeded: silent
