@@ -1,0 +1,108 @@
+# Příklad 2: Plná ochrana s vypínáním spotřebičů a kamerami
+# Kompletní nastavení včetně auto-vypínání nebezpečných spotřebičů a camera snapshots
+
+alias: Fire Detection - Full Protection with Cameras
+description: Plná požární ochrana s vypínáním spotřebičů a fotkami z kamer
+use_blueprint:
+  path: fire_detection/fire_detection_v6.yaml
+  input:
+    # Základní nastavení
+    threshold: 60
+    minimum_duration: 20
+    cooldown_minutes: 5
+
+    # Teplotní senzory - všechny místnosti
+    include:
+      - sensor.kitchen_temperature
+      - sensor.living_room_temperature
+      - sensor.bedroom_temperature
+      - sensor.garage_temperature
+      - sensor.basement_temperature
+
+    # 🔌 AUTOMATICKÉ VYPÍNÁNÍ SPOTŘEBIČŮ
+    enable_appliance_shutdown: true
+    appliance_entities:
+      entity_id:
+        - switch.electric_kettle          # Rychlovarná konvice
+        - switch.space_heater              # Elektrické kamna
+        - switch.coffee_maker              # Kávovar
+        - water_heater.boiler              # Bojler
+        - climate.air_conditioner          # Klimatizace
+        - fan.ceiling_fan                  # Ventilátor
+        - switch.electric_radiator         # Elektrický radiátor
+        - switch.dehumidifier              # Odvlhčovač
+
+    # 📸 CAMERA SNAPSHOTS DO TELEGRAMU
+    enable_camera_snapshot: true
+    camera_entities:
+      - camera.kitchen
+      - camera.living_room
+      - camera.garage
+      - camera.entrance
+    camera_snapshot_delay: 1  # 1 sekunda mezi snapshoty
+
+    # 🚨 SIRÉNA
+    enable_sirens: true
+    siren_entities:
+      entity_id:
+        - switch.alarm_siren
+        - siren.outdoor_siren
+
+    # 💡 SVĚTELNÝ ALARM - blikající červená ve všech místnostech
+    enable_light_alarm: true
+    light_entities:
+      entity_id:
+        - light.living_room
+        - light.kitchen
+        - light.bedroom
+        - light.hallway
+        - light.bathroom
+    light_mode: blink
+    light_color: [255, 0, 0]
+    light_brightness: 255
+    blink_speed: 0.5
+    restore_lights: true
+
+    # 📢 TTS HLÁŠENÍ
+    enable_media_player: true
+    tts_service: tts.google_translate_say
+    tts_language: cs
+    tts_alarm_message: "Pozor! Požární poplach! Detekována vysoká teplota! Evakuujte prostor!"
+    media_player_entities:
+      entity_id:
+        - media_player.living_room_speaker
+        - media_player.bedroom_speaker
+        - media_player.kitchen_display
+
+    # 📱 TELEGRAM NOTIFIKACE
+    enable_telegram: true
+    telegram_service: notify.telegram
+    telegram_message: |
+      🔥 POŽÁRNÍ POPLACH! 🔥
+      ⚠️ Detekována vysoká teplota!
+
+      🔌 Spotřebiče automaticky vypnuty
+      📸 Odesílám fotky z kamer...
+
+    # 📲 MOBILE APP NOTIFIKACE
+    enable_mobile: true
+    mobile_service: notify.mobile_app_iphone
+    mobile_title: "🔥 POŽÁRNÍ POPLACH!"
+    mobile_message: "⚠️ Vysoká teplota! Spotřebiče vypnuty!"
+    mobile_channel: alarm
+
+    # 🏠 HOME ASSISTANT PERSISTENT NOTIFICATION
+    enable_ha_notification: true
+    ha_notification_id: fire_alert_full
+    ha_notification_title: "🔥 Požární poplach"
+
+    # ⚙️ VLASTNÍ AKCE (volitelné)
+    actions:
+      # Vypnout celý elektřinu v hlavním rozvaděči (pokud máte chytrý vypínač)
+      - service: switch.turn_off
+        target:
+          entity_id: switch.main_circuit_breaker
+      # Zavolat na mobil přes VoIP
+      - service: notify.voip_call
+        data:
+          message: "Požární poplach doma! Vysoká teplota detekována!"

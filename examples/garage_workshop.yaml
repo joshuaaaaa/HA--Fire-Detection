@@ -1,0 +1,91 @@
+# Příklad 4: Garáž / Dílna
+# Speciální nastavení pro garáž nebo dílnu s vyšším prahem a bezpečnostním vypínáním nářadí
+
+alias: Fire Detection - Garage/Workshop
+description: Požární ochrana pro garáž nebo dílnu
+use_blueprint:
+  path: fire_detection/fire_detection_v6.yaml
+  input:
+    # Základní nastavení - vyšší práh pro garáž
+    threshold: 70  # V garáži může být vyšší teplota
+    minimum_duration: 45  # Delší čekání kvůli možnému teplu od auta
+    cooldown_minutes: 10
+
+    # Teplotní senzory
+    include:
+      - sensor.garage_temperature
+      - sensor.workshop_temperature
+      - sensor.storage_room_temperature
+
+    # 🔌 VYPÍNÁNÍ NÁŘADÍ A SPOTŘEBIČŮ V GARÁŽI
+    enable_appliance_shutdown: true
+    appliance_entities:
+      entity_id:
+        - switch.workshop_power_outlet     # Hlavní zásuvka dílny
+        - switch.garage_heater              # Topení v garáži
+        - switch.compressor                 # Kompresor
+        - switch.battery_charger            # Nabíječka baterií
+        - switch.power_tools                # Elektrické nářadí
+        - switch.welding_machine            # Svářečka
+        - fan.garage_ventilation            # Ventilace
+
+    # 📸 CAMERA SNAPSHOTS - důležité pro garáž (cenné vybavení)
+    enable_camera_snapshot: true
+    camera_entities:
+      - camera.garage_exterior
+      - camera.garage_interior
+      - camera.driveway
+    camera_snapshot_delay: 1.5
+
+    # 🚨 SIRÉNA - hlasitá pro venkovní prostor
+    enable_sirens: true
+    siren_entities:
+      entity_id:
+        - switch.garage_siren
+        - siren.outdoor_alarm
+
+    # 💡 SVĚTELNÝ ALARM - silné blikání
+    enable_light_alarm: true
+    light_entities:
+      entity_id:
+        - light.garage_main
+        - light.garage_workshop
+        - light.driveway
+    light_mode: blink
+    light_color: [255, 0, 0]
+    light_brightness: 255
+    blink_speed: 0.3  # Rychlé blikání
+    restore_lights: true
+
+    # 📢 TTS - vypnuto (v garáži není obvykle reproduktor)
+    enable_media_player: false
+
+    # 📱 TELEGRAM
+    enable_telegram: true
+    telegram_service: notify.telegram
+    telegram_message: |
+      🔥 POŽÁRNÍ POPLACH V GARÁŽI! 🔥
+      ⚠️ Detekována vysoká teplota!
+
+      🔌 Veškeré nářadí automaticky vypnuto
+      🚗 Zkontrolujte garáž a vozidlo!
+
+    # 📲 MOBILE APP - urgentní
+    enable_mobile: true
+    mobile_service: notify.mobile_app_iphone
+    mobile_title: "🔥 POPLACH V GARÁŽI!"
+    mobile_message: "⚠️ Vysoká teplota! Nářadí vypnuto!"
+    mobile_channel: alarm
+
+    # ⚙️ VLASTNÍ AKCE
+    actions:
+      # Otevřít garážová vrata pro ventilaci
+      - service: cover.open_cover
+        target:
+          entity_id: cover.garage_door
+      # Zapnout venkovní osvětlení
+      - service: light.turn_on
+        target:
+          entity_id: light.outdoor_lights
+        data:
+          brightness: 255

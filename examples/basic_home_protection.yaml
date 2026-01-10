@@ -1,0 +1,41 @@
+# Příklad 1: Základní domácí ochrana
+# Jednoduché nastavení pro běžnou domácnost s Telegram notifikacemi a světelným alarmem
+
+alias: Fire Detection - Basic Home Protection
+description: Základní požární ochrana pro domácnost
+use_blueprint:
+  path: fire_detection/fire_detection_v6.yaml
+  input:
+    # Základní nastavení
+    threshold: 60
+    minimum_duration: 30
+    cooldown_minutes: 5
+
+    # Teplotní senzory
+    include:
+      - sensor.kitchen_temperature
+      - sensor.living_room_temperature
+      - sensor.bedroom_temperature
+
+    # Telegram notifikace
+    enable_telegram: true
+    telegram_service: notify.telegram
+    telegram_message: |
+      🔥 POŽÁRNÍ POPLACH! 🔥
+      ⚠️ Detekována vysoká teplota v domě!
+
+    # Světelný alarm - blikající červená
+    enable_light_alarm: true
+    light_entities:
+      entity_id:
+        - light.living_room
+        - light.bedroom
+        - light.hallway
+    light_mode: blink
+    light_color: [255, 0, 0]
+    light_brightness: 255
+    blink_speed: 0.5
+    restore_lights: true
+
+    # Mobile notifikace (volitelné)
+    enable_mobile: false

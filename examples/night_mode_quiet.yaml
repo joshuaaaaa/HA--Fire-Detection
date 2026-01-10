@@ -1,0 +1,73 @@
+# Příklad 3: Noční režim (tichý)
+# Nastavení pro noc - bez sirény a TTS, jen světla a notifikace
+
+alias: Fire Detection - Night Mode (Quiet)
+description: Noční režim bez sirén a hlasových oznámení
+use_blueprint:
+  path: fire_detection/fire_detection_v6.yaml
+  input:
+    # Základní nastavení - citlivější pro noc
+    threshold: 55
+    minimum_duration: 15
+    cooldown_minutes: 3
+
+    # Teplotní senzory - hlavně ložnice
+    include:
+      - sensor.bedroom_temperature
+      - sensor.kids_room_temperature
+      - sensor.hallway_temperature
+
+    # 🔌 VYPÍNÁNÍ SPOTŘEBIČŮ - i v noci!
+    enable_appliance_shutdown: true
+    appliance_entities:
+      entity_id:
+        - switch.bedroom_heater
+        - switch.night_lamp_heater
+        - fan.bedroom_fan
+
+    # 📸 CAMERA SNAPSHOTS - pro důkazy
+    enable_camera_snapshot: true
+    camera_entities:
+      - camera.bedroom
+      - camera.hallway
+    camera_snapshot_delay: 1
+
+    # 🚨 SIRÉNA - VYPNUTO v noci
+    enable_sirens: false
+
+    # 💡 SVĚTELNÝ ALARM - pulzující s polovičním jasem
+    enable_light_alarm: true
+    light_entities:
+      entity_id:
+        - light.bedroom
+        - light.hallway
+    light_mode: pulse  # Pulzování místo blikání
+    light_color: [255, 100, 0]  # Oranžová (méně rušivá než červená)
+    light_brightness: 128  # Poloviční jas
+    blink_speed: 1.5  # Pomalejší puls
+    restore_lights: true
+
+    # 📢 TTS - VYPNUTO v noci (nerušit spáče)
+    enable_media_player: false
+
+    # 📱 TELEGRAM - zapnuto
+    enable_telegram: true
+    telegram_service: notify.telegram
+    telegram_message: |
+      🌙 NOČNÍ POŽÁRNÍ POPLACH 🌙
+      ⚠️ Detekována vysoká teplota v noci!
+
+      🔇 Tichý režim aktivní
+      📸 Fotky z kamer připojeny
+
+    # 📲 MOBILE APP - vysoká priorita pro probuzení
+    enable_mobile: true
+    mobile_service: notify.mobile_app_iphone
+    mobile_title: "🔥 NOČNÍ POPLACH!"
+    mobile_message: "⚠️ Vysoká teplota! Zkontrolujte dům!"
+    mobile_channel: alarm
+
+    # 🏠 PERSISTENT NOTIFICATION
+    enable_ha_notification: true
+    ha_notification_id: fire_alert_night
+    ha_notification_title: "🌙 Noční požární poplach"
