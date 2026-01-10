@@ -48,6 +48,17 @@ use_blueprint:
     # ==========================================
     # NOTIFIKACE
     # ==========================================
+
+    # TTS hlášení
+    enable_media_player: true
+    tts_service: tts.google_translate_say
+    tts_alarm_message_below: "Pozor! Nízká teplota! Topení automaticky zapnuto pro prevenci zamrznutí!"
+    tts_language: cs
+    media_player_entities:
+      entity_id:
+        - media_player.living_room_speaker
+        - media_player.bedroom_speaker
+
     enable_telegram: true
     telegram_service: notify.telegram
     telegram_message_below: |

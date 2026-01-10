@@ -35,7 +35,7 @@ Univerzální teplotní monitoring s alarmy pro VYSOKÉ (požár, přehřátí) 
 - ❄️ Ochrana před mrznutím: Automatické zapnutí topení, cirkulace
 - 🔥 Ochrana před přehřátím: Automatické zapnutí ventilace, chlazení
 - ⚙️ Automatické akce: Zapnout/vypnout zařízení při alarmu
-- 📱 Flexibilní notifikace: Telegram, mobile, HA (různé zprávy pro above/below)
+- 📱 Flexibilní notifikace: Telegram, mobile, HA, TTS (různé zprávy pro above/below)
 - 🚰 Prevence zamrznutí potrubí: Speciální režim s kritickým prahem
 - 🖥️ Ochrana elektroniky: Server rooms, network cabinets
 

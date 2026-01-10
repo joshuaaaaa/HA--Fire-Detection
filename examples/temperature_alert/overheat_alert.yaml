@@ -47,6 +47,16 @@ use_blueprint:
     # ==========================================
     # NOTIFIKACE
     # ==========================================
+
+    # TTS hlášení
+    enable_media_player: true
+    tts_service: tts.google_translate_say
+    tts_alarm_message_above: "Pozor! Vysoká teplota v server roomu! Přehřátí detekováno! Ventilace aktivována!"
+    tts_language: cs
+    media_player_entities:
+      entity_id:
+        - media_player.office_speaker
+
     enable_telegram: true
     telegram_service: notify.telegram
     telegram_message_above: |

@@ -226,6 +226,53 @@ blueprint:
         text:
 
     # ==========================================
+    # Media Player TTS
+    # ==========================================
+    enable_media_player:
+      name: Enable Media Player TTS
+      description: Play TTS message on media player/speaker
+      default: false
+      selector:
+        boolean:
+
+    media_player_entities:
+      name: Media Player Entities
+      description: Select media players/speakers for TTS announcement (OPTIONAL)
+      default: {}
+      selector:
+        target:
+          entity:
+            domain: media_player
+
+    tts_service:
+      name: TTS Service
+      description: Text-to-speech service to use
+      default: tts.google_translate_say
+      selector:
+        text:
+
+    tts_alarm_message_above:
+      name: TTS Message (Above Threshold)
+      description: Message to announce when temperature goes ABOVE threshold
+      default: "Pozor! Vysoká teplota! Přehřátí detekováno!"
+      selector:
+        text:
+
+    tts_alarm_message_below:
+      name: TTS Message (Below Threshold)
+      description: Message to announce when temperature goes BELOW threshold
+      default: "Pozor! Nízká teplota! Riziko zamrznutí!"
+      selector:
+        text:
+
+    tts_language:
+      name: TTS Language
+      description: Language code for TTS (e.g., cs, en, sk, de)
+      default: cs
+      selector:
+        text:
+
+    # ==========================================
     # Additional Actions
     # ==========================================
     actions:
@@ -264,6 +311,14 @@ variables:
   ha_notification_title_above: !input ha_notification_title_above
   ha_notification_title_below: !input ha_notification_title_below
 
+  # TTS inputs
+  enable_media_player: !input enable_media_player
+  media_player_entities_raw: !input media_player_entities
+  tts_service: !input tts_service
+  tts_alarm_message_above: !input tts_alarm_message_above
+  tts_alarm_message_below: !input tts_alarm_message_below
+  tts_language: !input tts_language
+
   # Normalizace entity_id na vždy pole
   include_entity_ids: >
     {% if include is string %}
@@ -290,6 +345,10 @@ variables:
   has_entities_to_turn_off: >
     {% set entities = entities_to_turn_off_raw %}
     {{ entities is mapping and entities.entity_id is defined and entities.entity_id | length > 0 }}
+
+  has_media_players: >
+    {% set players = media_player_entities_raw %}
+    {{ players is mapping and players.entity_id is defined and players.entity_id | length > 0 }}
 
   # ALARM: Senzory mimo práh
   alarm_sensors: >
@@ -466,6 +525,20 @@ action:
   # ==========================================
   # NOTIFIKACE
   # ==========================================
+
+  # TTS hlášení
+  - if: "{{ enable_media_player and has_media_players }}"
+    then:
+      - service: "{{ tts_service }}"
+        target: !input media_player_entities
+        data:
+          message: >
+            {% if threshold_mode == 'above' %}
+              {{ tts_alarm_message_above }}
+            {% else %}
+              {{ tts_alarm_message_below }}
+            {% endif %}
+          language: "{{ tts_language }}"
 
   # Telegram
   - if: "{{ enable_telegram }}"

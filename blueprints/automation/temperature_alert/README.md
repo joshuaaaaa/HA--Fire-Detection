@@ -29,6 +29,7 @@ Univerzální blueprint pro monitoring teplot s alarmy pro VYSOKÉ (požár, př
 - **Telegram**: Detailní zprávy s info o senzorech a teplotách
 - **Mobile App**: Push notifikace s vysokou prioritou
 - **HA Persistent**: Trvalé notifikace v Home Assistant UI
+- **TTS (Media Player)**: Hlasové oznámení přes reproduktory/smart speakers
 - **Vlastní zprávy**: Pro každý režim (above/below) zvlášť
 
 ## 📦 Instalace
@@ -96,6 +97,15 @@ use_blueprint:
       entity_id:
         - fan.basement_ventilation
 
+    # TTS oznámení
+    enable_media_player: true
+    tts_service: tts.google_translate_say
+    tts_alarm_message_below: "Pozor! Nízká teplota! Topení automaticky zapnuto!"
+    tts_language: cs
+    media_player_entities:
+      entity_id:
+        - media_player.living_room_speaker
+
     enable_telegram: true
     telegram_message_below: |
       ❄️ KRITICKÁ TEPLOTA! ❄️
@@ -105,6 +115,7 @@ use_blueprint:
 **Co to dělá:**
 - Při teplotě pod 3°C automaticky zapne topení
 - Vypne ventilaci (aby neunikalo teplo)
+- TTS hlasové oznámení přes reproduktor
 - Telegram notifikace o akci
 
 ### Příklad 3: Upozornění na přehřátí serveru
