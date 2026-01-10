@@ -1,0 +1,53 @@
+# Příklad 1: Základní upozornění na mrznutí
+# Hlídá nízké teploty a upozorní když hrozí zamrznutí
+
+alias: Freeze Alert - Basic
+description: Upozornění na nízké teploty s rizikem zamrznutí
+use_blueprint:
+  path: temperature_alert/temperature_alert.yaml
+  input:
+    # REŽIM: Pod prahem (mrznutí)
+    threshold_mode: below
+
+    # Práh: 5°C (doporučeno pro prevenci zamrznutí)
+    threshold: 5
+
+    # Sledované senzory
+    include:
+      - sensor.outdoor_temperature
+      - sensor.garage_temperature
+      - sensor.basement_temperature
+
+    # Musí vydržet 5 minut pod prahem
+    minimum_duration: 300
+
+    # Cooldown 30 minut (nerušit často)
+    cooldown_minutes: 30
+
+    # Telegram notifikace
+    enable_telegram: true
+    telegram_service: notify.telegram
+    telegram_message_below: |
+      ❄️ VAROVÁNÍ: NÍZKÁ TEPLOTA! ❄️
+      ⚠️ Riziko zamrznutí!
+
+      🏠 Zkontrolujte prosím topení a potrubí!
+
+    # Mobile notifikace
+    enable_mobile: true
+    mobile_service: notify.mobile_app_phone
+    mobile_title_below: "❄️ RIZIKO MRZNUTÍ!"
+    mobile_message_below: "⚠️ Teplota klesla pod 5°C!"
+    mobile_channel: alarm
+
+    # HA persistent notification
+    enable_ha_notification: true
+    ha_notification_id: freeze_alert
+    ha_notification_title_below: "❄️ Riziko zamrznutí"
+
+# Pro optimální fungování vytvořte input_boolean pro manuální vypnutí:
+# input_boolean:
+#   freeze_alert_enabled:
+#     name: Freeze Alert aktivní
+#     initial: on
+#     icon: mdi:snowflake-alert

@@ -1,0 +1,92 @@
+# Příklad 3: Upozornění na přehřátí
+# Hlídá vysoké teploty a upozorní při přehřátí (např. server room, sklep)
+
+alias: Overheat Alert - Equipment Protection
+description: Upozornění na vysoké teploty pro ochranu zařízení
+use_blueprint:
+  path: temperature_alert/temperature_alert.yaml
+  input:
+    # REŽIM: Nad prahem (přehřátí)
+    threshold_mode: above
+
+    # Práh: 35°C (běžný limit pro elektroniku)
+    threshold: 35
+
+    # Sledované senzory - místnosti s elektronikou
+    include:
+      - sensor.server_room_temperature
+      - sensor.network_cabinet_temperature
+      - sensor.garage_server_temperature
+      - sensor.attic_temperature
+
+    # Musí vydržet 3 minuty nad prahem
+    minimum_duration: 180
+
+    # Cooldown 15 minut
+    cooldown_minutes: 15
+
+    # ==========================================
+    # AUTOMATICKÉ AKCE
+    # ==========================================
+    enable_auto_actions: true
+
+    # ZAPNOUT chlazení při přehřátí
+    entities_to_turn_on:
+      entity_id:
+        - fan.server_room_fan
+        - fan.cabinet_cooling_fan
+        - switch.exhaust_fan
+        - climate.server_room_ac
+
+    # VYPNOUT zbytečné zdroje tepla
+    entities_to_turn_off:
+      entity_id:
+        - light.server_room_lights
+        - switch.non_essential_equipment
+
+    # ==========================================
+    # NOTIFIKACE
+    # ==========================================
+    enable_telegram: true
+    telegram_service: notify.telegram
+    telegram_message_above: |
+      🔥 VAROVÁNÍ: VYSOKÁ TEPLOTA! 🔥
+      ⚠️ Riziko přehřátí zařízení!
+
+      ✅ Ventilace zapnuta
+      ✅ Světla vypnuta
+
+      🖥️ Zkontrolujte prosím server room!
+
+    enable_mobile: true
+    mobile_service: notify.mobile_app_phone
+    mobile_title_above: "🔥 PŘEHŘÁTÍ!"
+    mobile_message_above: "⚠️ Teplota přesáhla 35°C!"
+    mobile_channel: alarm
+
+    enable_ha_notification: true
+    ha_notification_id: overheat_alert
+    ha_notification_title_above: "🔥 Varování: Přehřátí"
+
+    # ==========================================
+    # VLASTNÍ AKCE
+    # ==========================================
+    actions:
+      # Zalogovat událost
+      - service: logbook.log
+        data:
+          name: Overheat Alert
+          message: "Vysoká teplota detekována - chlazení aktivováno"
+
+      # Nastavit klimatizaci na nižší teplotu
+      - service: climate.set_temperature
+        target:
+          entity_id: climate.server_room_ac
+        data:
+          temperature: 22
+
+# POUŽITÍ:
+# - Server rooms (obvykle práh 25-30°C)
+# - Network cabinets (práh 30-35°C)
+# - Podkroví v létě (práh 40-45°C)
+# - Garáže s elektronikou (práh 30-35°C)

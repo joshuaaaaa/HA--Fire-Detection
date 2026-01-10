@@ -1,0 +1,166 @@
+# Příklad 4: Prevence zamrznutí vodovodního potrubí
+# Pokročilý systém pro ochranu potrubí s automatickým vypouštěním a topením
+
+alias: Pipe Freeze Prevention - Advanced
+description: Komplexní ochrana vodovodního potrubí před zamrznutím
+use_blueprint:
+  path: temperature_alert/temperature_alert.yaml
+  input:
+    # REŽIM: Pod prahem
+    threshold_mode: below
+
+    # Práh: 2°C (kritická teplota pro potrubí)
+    threshold: 2
+
+    # Sledované senzory - místa s potrubím
+    include:
+      - sensor.basement_pipe_temperature
+      - sensor.garage_water_line_temperature
+      - sensor.outdoor_pipe_sensor
+      - sensor.attic_pipe_temperature
+
+    # Okamžitá reakce - jen 1 minuta
+    minimum_duration: 60
+
+    # Cooldown 10 minut
+    cooldown_minutes: 10
+
+    # ==========================================
+    # AUTOMATICKÉ AKCE
+    # ==========================================
+    enable_auto_actions: true
+
+    # ZAPNOUT topné kabely a cirkulaci
+    entities_to_turn_on:
+      entity_id:
+        - switch.pipe_heating_cable_basement
+        - switch.pipe_heating_cable_garage
+        - switch.water_circulation_pump
+        - switch.emergency_pipe_heater
+
+    # VYPNOUT venkovní kohoutky (prevence prasknutí)
+    entities_to_turn_off:
+      entity_id:
+        - switch.outdoor_water_valve
+        - switch.garden_irrigation_pump
+
+    # ==========================================
+    # NOTIFIKACE
+    # ==========================================
+    enable_telegram: true
+    telegram_service: notify.telegram
+    telegram_message_below: |
+      ❄️🚨 KRITICKÉ! RIZIKO ZAMRZNUTÍ POTRUBÍ! 🚨❄️
+
+      ⚠️ Teplota klesla pod 2°C!
+
+      ✅ Akce provedeny:
+      • Topné kabely zapnuty
+      • Cirkulace aktivována
+      • Venkovní ventily uzavřeny
+
+      🔧 OKAMŽITĚ:
+      1. Zkontrolujte všechna potrubí
+      2. Vypusťte vodu z venkovních kohoutků
+      3. Otevřete skříňky pod dřezy (teplý vzduch)
+      4. Nechte kapky téct z kohoutků
+
+      📞 Máte-li pochybnosti, volejte instalatéra!
+
+    enable_mobile: true
+    mobile_service: notify.mobile_app_phone
+    mobile_title_below: "🚨 KRITICKÉ: MRZNOU TRUBKY!"
+    mobile_message_below: "❄️ Okamžitě jednejte! Teplota pod 2°C!"
+    mobile_channel: alarm
+
+    enable_ha_notification: true
+    ha_notification_id: pipe_freeze_critical
+    ha_notification_title_below: "🚨 Kritické riziko zamrznutí potrubí"
+
+    # ==========================================
+    # POKROČILÉ VLASTNÍ AKCE
+    # ==========================================
+    actions:
+      # Zalogovat kritickou událost
+      - service: logbook.log
+        data:
+          name: CRITICAL - Pipe Freeze
+          message: "KRITICKÉ RIZIKO: Potrubí může zamrznout - všechny ochranné systémy aktivovány"
+
+      # Zapnout všechna topení na maximum
+      - service: climate.set_hvac_mode
+        target:
+          entity_id:
+            - climate.basement_thermostat
+            - climate.garage_thermostat
+        data:
+          hvac_mode: heat
+
+      - service: climate.set_temperature
+        target:
+          entity_id:
+            - climate.basement_thermostat
+            - climate.garage_thermostat
+        data:
+          temperature: 20
+
+      # Poslat urgentní notifikaci i na druhý telefon
+      - service: notify.mobile_app_phone_backup
+        data:
+          title: "🚨 KRITICKÉ RIZIKO ZAMRZNUTÍ"
+          message: "Teplota potrubí pod 2°C! Okamžitě jednejte!"
+          data:
+            channel: alarm
+            importance: max
+            priority: high
+            ttl: 0
+
+      # Spustit blikání červených světel jako vizuální alarm
+      - service: light.turn_on
+        target:
+          entity_id:
+            - light.basement
+            - light.garage
+        data:
+          rgb_color: [255, 0, 0]
+          brightness: 255
+
+      # Poslat email pro dlouhodobý záznam
+      - service: notify.email
+        data:
+          title: "KRITICKÉ: Riziko zamrznutí potrubí"
+          message: |
+            KRITICKÁ TEPLOTNÍ UDÁLOST
+
+            Čas: {{ now().strftime('%H:%M:%S %d.%m.%Y') }}
+            Teplota klesla pod kritický práh 2°C
+
+            Systémy aktivovány:
+            - Topné kabely potrubí
+            - Cirkulační pumpa
+            - Nouzové topení
+
+            Okamžitě zkontrolujte vodovodní potrubí!
+
+# INSTALAČNÍ DOPORUČENÍ:
+# =======================
+# 1. Nainstalujte teplotní senzory na exponovaná místa:
+#    - Neizolované potrubí v garáži/sklepě
+#    - Venkovní vodovodní přípojky
+#    - Podkroví s potrubím
+#
+# 2. Instalujte topné kabely na kritická potrubí
+#
+# 3. Zajistěte cirkulační pumpu pro teplou vodu
+#
+# 4. Mějte plán B (manuální vypuštění, izolace)
+#
+# 5. Testujte systém před zimou!
+
+# PREVENCE:
+# =========
+# - Izolujte všechna exponovaná potrubí
+# - Těsněte okna a dveře v místnostech s potrubím
+# - V extrémních mrazech nechte kohoutky kapkat
+# - Vypusťte venkovní kohoutky před zimou
+# - Mějte nouzový plán pro výpadek elektřiny

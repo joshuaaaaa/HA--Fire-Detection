@@ -1,0 +1,93 @@
+# Příklad 2: Automatická prevence zamrznutí
+# Automaticky zapne topení a vypne ventilaci když hrozí mrznutí
+
+alias: Freeze Prevention - Automatic Heating
+description: Automaticky zapne topení při nízkých teplotách
+use_blueprint:
+  path: temperature_alert/temperature_alert.yaml
+  input:
+    # REŽIM: Pod prahem
+    threshold_mode: below
+
+    # Práh: 3°C (nižší než basic - aktivnější ochrana)
+    threshold: 3
+
+    # Sledované senzory - kritické místnosti
+    include:
+      - sensor.basement_temperature
+      - sensor.garage_temperature
+      - sensor.utility_room_temperature
+      - sensor.bathroom_temperature
+
+    # Rychlá reakce - 2 minuty
+    minimum_duration: 120
+
+    # Cooldown 20 minut
+    cooldown_minutes: 20
+
+    # ==========================================
+    # AUTOMATICKÉ AKCE
+    # ==========================================
+    enable_auto_actions: true
+
+    # ZAPNOUT topení při mrazu
+    entities_to_turn_on:
+      entity_id:
+        - switch.basement_heater
+        - switch.garage_heater
+        - climate.utility_room_thermostat
+        - switch.pipe_heating_cable
+
+    # VYPNOUT ventilaci (aby neunikalo teplo)
+    entities_to_turn_off:
+      entity_id:
+        - fan.basement_ventilation
+        - fan.garage_exhaust
+        - switch.attic_fan
+
+    # ==========================================
+    # NOTIFIKACE
+    # ==========================================
+    enable_telegram: true
+    telegram_service: notify.telegram
+    telegram_message_below: |
+      ❄️❄️ KRITICKÁ TEPLOTA! ❄️❄️
+      🔴 Automatická prevence zamrznutí aktivována!
+
+      ✅ Topení zapnuto
+      ✅ Ventilace vypnuta
+
+      🏠 Kontrolujte prosím stav topení!
+
+    enable_mobile: true
+    mobile_service: notify.mobile_app_phone
+    mobile_title_below: "❄️ AUTO-PREVENCE MRAZU"
+    mobile_message_below: "🔴 Topení automaticky zapnuto!"
+    mobile_channel: alarm
+
+    enable_ha_notification: true
+    ha_notification_id: freeze_prevention_auto
+    ha_notification_title_below: "❄️ Auto-prevence zamrznutí"
+
+    # ==========================================
+    # VLASTNÍ AKCE
+    # ==========================================
+    actions:
+      # Zalogovat událost
+      - service: logbook.log
+        data:
+          name: Freeze Prevention
+          message: "Automatická prevence zamrznutí aktivována - topení zapnuto"
+
+      # Nastavit termostat na vyšší teplotu
+      - service: climate.set_temperature
+        target:
+          entity_id: climate.utility_room_thermostat
+        data:
+          temperature: 18
+
+# DOPORUČENÍ:
+# 1. Použijte kvalitní teplotní senzory v kritických místech
+# 2. Testujte pravidelně že topení funguje
+# 3. Mějte záložní zdroj tepla pro případ výpadku
+# 4. Monitorujte spotřebu energie

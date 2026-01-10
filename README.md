@@ -26,6 +26,32 @@ https://github.com/joshuaaaaa/HA-Hori/blob/main/blueprints/automation/fire_detec
 
 ---
 
+### 🌡️ [Temperature Threshold Alert Blueprint](./blueprints/automation/temperature_alert/)
+
+Univerzální teplotní monitoring s alarmy pro VYSOKÉ (požár, přehřátí) i NÍZKÉ (mrznutí, podchlazení) teploty.
+
+**Hlavní funkce:**
+- 🔄 Bidirekcční monitoring: Above (nad prahem) i Below (pod prahem)
+- ❄️ Ochrana před mrznutím: Automatické zapnutí topení, cirkulace
+- 🔥 Ochrana před přehřátím: Automatické zapnutí ventilace, chlazení
+- ⚙️ Automatické akce: Zapnout/vypnout zařízení při alarmu
+- 📱 Flexibilní notifikace: Telegram, mobile, HA (různé zprávy pro above/below)
+- 🚰 Prevence zamrznutí potrubí: Speciální režim s kritickým prahem
+- 🖥️ Ochrana elektroniky: Server rooms, network cabinets
+
+**Typické použití:**
+- ❄️ **Mrznutí** (práh 2-5°C): Sklepy, garáže, vodovodní potrubí
+- 🔥 **Přehřátí** (práh 30-40°C): Server rooms, síťové rozvaděče, podkroví
+
+**Instalace:**
+```
+https://github.com/joshuaaaaa/HA-Hori/blob/main/blueprints/automation/temperature_alert/temperature_alert.yaml
+```
+
+[📖 Kompletní dokumentace](./blueprints/automation/temperature_alert/README.md) | [💡 Příklady](./examples/temperature_alert/)
+
+---
+
 ### 💡 [Blink/Flash Device Controller](./blueprints/automation/blink_flash/)
 
 Univerzální blueprint pro automatické blikání/pulzování zařízení s přesným časovým řízením.
@@ -103,6 +129,28 @@ use_blueprint:
     enable_light_alarm: true
 ```
 
+### Temperature Alert Blueprint
+
+```yaml
+# Automatická prevence zamrznutí
+alias: Freeze Prevention
+use_blueprint:
+  path: temperature_alert/temperature_alert.yaml
+  input:
+    threshold_mode: below
+    threshold: 3
+    include:
+      - sensor.basement_temperature
+      - sensor.garage_temperature
+    minimum_duration: 120
+    enable_auto_actions: true
+    entities_to_turn_on:
+      entity_id:
+        - switch.basement_heater
+        - switch.pipe_heating_cable
+    enable_telegram: true
+```
+
 ### Blink/Flash Blueprint
 
 ```yaml
@@ -131,6 +179,9 @@ HA-Hori/
 │       ├── fire_detection/
 │       │   ├── fire_detection_v6.yaml          # Fire Detection Blueprint
 │       │   └── README.md                        # Dokumentace
+│       ├── temperature_alert/
+│       │   ├── temperature_alert.yaml           # Temperature Alert Blueprint
+│       │   └── README.md                        # Dokumentace
 │       └── blink_flash/
 │           ├── blink_flash.yaml                 # Blink/Flash Blueprint
 │           └── README.md                        # Dokumentace
@@ -139,6 +190,11 @@ HA-Hori/
     ├── full_protection_with_cameras.yaml        # Fire: Plná ochrana
     ├── night_mode_quiet.yaml                    # Fire: Noční režim
     ├── garage_workshop.yaml                     # Fire: Garáž/dílna
+    ├── temperature_alert/
+    │   ├── freeze_alert_basic.yaml              # Temp: Mrznutí základní
+    │   ├── freeze_prevention_auto.yaml          # Temp: Auto topení
+    │   ├── overheat_alert.yaml                  # Temp: Přehřátí
+    │   └── pipe_freeze_prevention.yaml          # Temp: Potrubí prevence
     └── blink_flash/
         ├── basic_blink.yaml                     # Blink: Základní
         ├── alarm_flash.yaml                     # Blink: Alarm
@@ -189,9 +245,9 @@ Pokud najdete problém:
 
 ## 📊 Statistiky
 
-- **Počet blueprintů**: 2
-- **Celkem příkladů**: 8
-- **Podporované domény**: 10+ (light, switch, camera, sensor, atd.)
+- **Počet blueprintů**: 3
+- **Celkem příkladů**: 12
+- **Podporované domény**: 15+ (light, switch, camera, sensor, climate, water_heater, fan, atd.)
 - **Jazyk**: Čeština + Angličtina
 
 ## 🔗 Užitečné odkazy

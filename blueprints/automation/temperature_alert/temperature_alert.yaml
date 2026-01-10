@@ -1,0 +1,515 @@
+blueprint:
+  name: Temperature Threshold Alert Blueprint
+  description: Universal temperature monitoring with alerts for both high (fire) and low (freeze) temperatures
+  domain: automation
+  source_url: https://github.com/joshuaaaaa/HA-Hori/blob/main/blueprints/automation/temperature_alert/temperature_alert.yaml
+
+  input:
+    # ==========================================
+    # Základní nastavení
+    # ==========================================
+    threshold_mode:
+      name: Threshold Mode
+      description: Monitor for temperatures ABOVE threshold (fire) or BELOW threshold (freeze)
+      default: below
+      selector:
+        select:
+          options:
+            - label: Nad prahem (Above) - Požár, přehřátí
+              value: above
+            - label: Pod prahem (Below) - Mrznutí, podchlazení
+              value: below
+
+    threshold:
+      name: Temperature Threshold
+      description: Temperature threshold in °C
+      default: 5
+      selector:
+        number:
+          min: -40
+          max: 150
+          step: 0.5
+          unit_of_measurement: "°C"
+
+    include:
+      name: Monitored Temperature Sensors
+      description: Select temperature sensors to monitor
+      selector:
+        entity:
+          multiple: true
+          filter:
+            device_class: temperature
+
+    minimum_duration:
+      name: Minimum Duration
+      description: How long temperature must stay beyond threshold before triggering alarm
+      default: 30
+      selector:
+        number:
+          min: 0
+          max: 3600
+          step: 5
+          unit_of_measurement: seconds
+
+    cooldown_minutes:
+      name: Notification Cooldown
+      description: Minimum minutes between repeated alarm notifications
+      default: 15
+      selector:
+        number:
+          min: 1
+          max: 180
+          step: 1
+          unit_of_measurement: minutes
+
+    alarm_control:
+      name: Manual Alarm Control (Input Boolean)
+      description: Optional input_boolean to manually disable alarm
+      default: {}
+      selector:
+        entity:
+          domain: input_boolean
+
+    # ==========================================
+    # Automatické akce při alarmu
+    # ==========================================
+    enable_auto_actions:
+      name: Enable Automatic Actions
+      description: Automatically turn on/off devices when alarm triggers
+      default: false
+      selector:
+        boolean:
+
+    entities_to_turn_on:
+      name: Entities to Turn ON
+      description: Devices to turn ON during alarm (e.g., heaters for freeze, fans for overheat)
+      default: {}
+      selector:
+        target:
+          entity:
+            - domain: switch
+            - domain: climate
+            - domain: water_heater
+            - domain: fan
+
+    entities_to_turn_off:
+      name: Entities to Turn OFF
+      description: Devices to turn OFF during alarm (e.g., water pumps for freeze, heaters for overheat)
+      default: {}
+      selector:
+        target:
+          entity:
+            - domain: switch
+            - domain: climate
+            - domain: water_heater
+            - domain: fan
+            - domain: light
+
+    # ==========================================
+    # Telegram Notifications
+    # ==========================================
+    enable_telegram:
+      name: Enable Telegram Notifications
+      description: Send temperature alerts via Telegram
+      default: true
+      selector:
+        boolean:
+
+    telegram_service:
+      name: Telegram Service
+      description: Telegram notification service to use
+      default: notify.telegram
+      selector:
+        text:
+
+    telegram_message_above:
+      name: Telegram Message (Above Threshold)
+      description: Message when temperature goes ABOVE threshold
+      default: |
+        🔥 VYSOKÁ TEPLOTA! 🔥
+        ⚠️ Teplota překročila horní limit!
+      selector:
+        text:
+          multiline: true
+
+    telegram_message_below:
+      name: Telegram Message (Below Threshold)
+      description: Message when temperature goes BELOW threshold
+      default: |
+        ❄️ NÍZKÁ TEPLOTA! ❄️
+        ⚠️ Riziko zamrznutí!
+      selector:
+        text:
+          multiline: true
+
+    # ==========================================
+    # Mobile App Notifications
+    # ==========================================
+    enable_mobile:
+      name: Enable Mobile App Notifications
+      description: Send temperature alerts to mobile app
+      default: false
+      selector:
+        boolean:
+
+    mobile_service:
+      name: Mobile App Service
+      description: Mobile app notification service to use
+      default: notify.mobile_app_phone
+      selector:
+        text:
+
+    mobile_title_above:
+      name: Mobile Title (Above Threshold)
+      description: Title when temperature goes ABOVE threshold
+      default: "🔥 VYSOKÁ TEPLOTA!"
+      selector:
+        text:
+
+    mobile_message_above:
+      name: Mobile Message (Above Threshold)
+      description: Message when temperature goes ABOVE threshold
+      default: "⚠️ Teplota překročila horní limit!"
+      selector:
+        text:
+
+    mobile_title_below:
+      name: Mobile Title (Below Threshold)
+      description: Title when temperature goes BELOW threshold
+      default: "❄️ NÍZKÁ TEPLOTA!"
+      selector:
+        text:
+
+    mobile_message_below:
+      name: Mobile Message (Below Threshold)
+      description: Message when temperature goes BELOW threshold
+      default: "⚠️ Riziko zamrznutí!"
+      selector:
+        text:
+
+    mobile_channel:
+      name: Mobile Notification Channel
+      description: Android notification channel
+      default: alarm
+      selector:
+        text:
+
+    # ==========================================
+    # HA Persistent Notifications
+    # ==========================================
+    enable_ha_notification:
+      name: Enable HA Persistent Notifications
+      description: Create persistent notification in Home Assistant
+      default: true
+      selector:
+        boolean:
+
+    ha_notification_id:
+      name: HA Notification ID
+      description: Unique ID for persistent notification
+      default: temperature_alert
+      selector:
+        text:
+
+    ha_notification_title_above:
+      name: HA Title (Above Threshold)
+      description: Title when temperature goes ABOVE threshold
+      default: "🔥 Vysoká teplota"
+      selector:
+        text:
+
+    ha_notification_title_below:
+      name: HA Title (Below Threshold)
+      description: Title when temperature goes BELOW threshold
+      default: "❄️ Nízká teplota"
+      selector:
+        text:
+
+    # ==========================================
+    # Additional Actions
+    # ==========================================
+    actions:
+      name: Additional Actions
+      description: Additional actions to perform when alarm triggers
+      default: []
+      selector:
+        action: {}
+
+variables:
+  threshold_mode: !input threshold_mode
+  threshold: !input threshold
+  include: !input include
+  minimum_duration: !input minimum_duration
+  cooldown_minutes: !input cooldown_minutes
+  alarm_control: !input alarm_control
+
+  # Auto actions
+  enable_auto_actions: !input enable_auto_actions
+  entities_to_turn_on_raw: !input entities_to_turn_on
+  entities_to_turn_off_raw: !input entities_to_turn_off
+
+  # Notification inputs
+  enable_telegram: !input enable_telegram
+  telegram_message_above: !input telegram_message_above
+  telegram_message_below: !input telegram_message_below
+  telegram_service: !input telegram_service
+
+  enable_mobile: !input enable_mobile
+  mobile_title_above: !input mobile_title_above
+  mobile_message_above: !input mobile_message_above
+  mobile_title_below: !input mobile_title_below
+  mobile_message_below: !input mobile_message_below
+
+  enable_ha_notification: !input enable_ha_notification
+  ha_notification_title_above: !input ha_notification_title_above
+  ha_notification_title_below: !input ha_notification_title_below
+
+  # Normalizace entity_id na vždy pole
+  include_entity_ids: >
+    {% if include is string %}
+      {{ [include] }}
+    {% else %}
+      {{ include }}
+    {% endif %}
+
+  # Kontroly
+  has_entities: >
+    {{ include_entity_ids is defined and include_entity_ids | length > 0 }}
+
+  alarm_enabled: >
+    {% if alarm_control is string and alarm_control != '' %}
+      {{ is_state(alarm_control, 'on') }}
+    {% else %}
+      true
+    {% endif %}
+
+  has_entities_to_turn_on: >
+    {% set entities = entities_to_turn_on_raw %}
+    {{ entities is mapping and entities.entity_id is defined and entities.entity_id | length > 0 }}
+
+  has_entities_to_turn_off: >
+    {% set entities = entities_to_turn_off_raw %}
+    {{ entities is mapping and entities.entity_id is defined and entities.entity_id | length > 0 }}
+
+  # ALARM: Senzory mimo práh
+  alarm_sensors: >
+    {% set r = namespace(list=[]) %}
+    {% if has_entities %}
+      {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
+        {% if s.entity_id in include_entity_ids
+           and s.state not in ['unknown','unavailable','none']
+           and (s.state is number or s.state | float(-999) != -999) %}
+          {% set temp = s.state | float %}
+          {% if threshold_mode == 'above' and temp > threshold %}
+            {% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}
+          {% elif threshold_mode == 'below' and temp < threshold %}
+            {% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    {{ r.list | join(', ') }}
+
+  alarm_sensor_count: >
+    {% set count = 0 %}
+    {% if has_entities %}
+      {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
+        {% if s.entity_id in include_entity_ids
+           and s.state not in ['unknown','unavailable','none']
+           and (s.state is number or s.state | float(-999) != -999) %}
+          {% set temp = s.state | float %}
+          {% if threshold_mode == 'above' and temp > threshold %}
+            {% set count = count + 1 %}
+          {% elif threshold_mode == 'below' and temp < threshold %}
+            {% set count = count + 1 %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    {{ count }}
+
+  # Extrémy
+  max_temperature: >
+    {% set temps = [] %}
+    {% if has_entities %}
+      {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
+        {% if s.entity_id in include_entity_ids
+           and s.state not in ['unknown','unavailable','none']
+           and (s.state is number or s.state | float(-999) != -999) %}
+          {% set temps = temps + [s.state | float] %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    {{ temps | max | round(1) if temps | length > 0 else 0 }}
+
+  min_temperature: >
+    {% set temps = [] %}
+    {% if has_entities %}
+      {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
+        {% if s.entity_id in include_entity_ids
+           and s.state not in ['unknown','unavailable','none']
+           and (s.state is number or s.state | float(-999) != -999) %}
+          {% set temps = temps + [s.state | float] %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    {{ temps | min | round(1) if temps | length > 0 else 0 }}
+
+  # Zprávy
+  telegram_alarm_final: >
+    {% if threshold_mode == 'above' %}
+      {{ telegram_message_above }}
+    {% else %}
+      {{ telegram_message_below }}
+    {% endif %}
+
+    🌡️ Senzory: {{ alarm_sensors }}
+    📈 Počet: {{ alarm_sensor_count }}
+    {% if threshold_mode == 'above' %}
+    🔥 Max: {{ max_temperature }}°C (práh: {{ threshold }}°C)
+    {% else %}
+    ❄️ Min: {{ min_temperature }}°C (práh: {{ threshold }}°C)
+    {% endif %}
+    ⏰ {{ now().strftime('%H:%M:%S %d.%m.%Y') }}
+
+  mobile_title_final: >
+    {% if threshold_mode == 'above' %}
+      {{ mobile_title_above }}
+    {% else %}
+      {{ mobile_title_below }}
+    {% endif %}
+
+  mobile_message_final: >
+    {% if threshold_mode == 'above' %}
+      {{ mobile_message_above }}
+    {% else %}
+      {{ mobile_message_below }}
+    {% endif %}
+    Senzory: {{ alarm_sensors }}
+    {% if threshold_mode == 'above' %}
+    Max: {{ max_temperature }}°C
+    {% else %}
+    Min: {{ min_temperature }}°C
+    {% endif %}
+
+  ha_notification_title_final: >
+    {% if threshold_mode == 'above' %}
+      {{ ha_notification_title_above }}
+    {% else %}
+      {{ ha_notification_title_below }}
+    {% endif %}
+
+  ha_alarm_final: >
+    **Teplotní alarm!**
+
+    **Režim:** {% if threshold_mode == 'above' %}Nad prahem{% else %}Pod prahem{% endif %}
+    **Práh:** {{ threshold }}°C
+    **Senzory:** {{ alarm_sensors }}
+    **Počet:** {{ alarm_sensor_count }}
+    {% if threshold_mode == 'above' %}
+    **Max:** {{ max_temperature }}°C
+    {% else %}
+    **Min:** {{ min_temperature }}°C
+    {% endif %}
+    **Čas:** {{ now().strftime('%H:%M:%S %d.%m.%Y') }}
+
+# TIME PATTERN - kontroluje každých 60 sekund
+trigger:
+  - trigger: time_pattern
+    minutes: "/1"
+
+# PODMÍNKA: Alarm zapnutý + teplota mimo práh
+condition:
+  - condition: template
+    value_template: "{{ alarm_enabled }}"
+  - condition: template
+    value_template: "{{ alarm_sensors != '' }}"
+
+action:
+  # Počkat minimum_duration a zkontrolovat znovu
+  - delay:
+      seconds: !input minimum_duration
+
+  # Zkontrolovat že stále platí alarm
+  - condition: template
+    value_template: "{{ alarm_sensors != '' }}"
+
+  # ==========================================
+  # AUTOMATICKÉ AKCE
+  # ==========================================
+  - if: "{{ enable_auto_actions }}"
+    then:
+      # Zapnout zařízení (např. topení při mrazu)
+      - if: "{{ has_entities_to_turn_on }}"
+        then:
+          - service: homeassistant.turn_on
+            target: !input entities_to_turn_on
+          - service: logbook.log
+            data:
+              name: "Temperature Alert"
+              message: >
+                Automaticky zapnuto při teplotním alarmu ({{ threshold_mode }})
+              entity_id: "{{ entities_to_turn_on_raw.entity_id if entities_to_turn_on_raw.entity_id is defined else [] }}"
+
+      # Vypnout zařízení (např. ventilaci při mrazu)
+      - if: "{{ has_entities_to_turn_off }}"
+        then:
+          - service: homeassistant.turn_off
+            target: !input entities_to_turn_off
+          - service: logbook.log
+            data:
+              name: "Temperature Alert"
+              message: >
+                Automaticky vypnuto při teplotním alarmu ({{ threshold_mode }})
+              entity_id: "{{ entities_to_turn_off_raw.entity_id if entities_to_turn_off_raw.entity_id is defined else [] }}"
+
+  # ==========================================
+  # NOTIFIKACE
+  # ==========================================
+
+  # Telegram
+  - if: "{{ enable_telegram }}"
+    then:
+      - service: "{{ telegram_service }}"
+        data:
+          message: "{{ telegram_alarm_final }}"
+
+  # Mobile
+  - if: "{{ enable_mobile }}"
+    then:
+      - service: !input mobile_service
+        data:
+          title: "{{ mobile_title_final }}"
+          message: "{{ mobile_message_final }}"
+          data:
+            channel: !input mobile_channel
+            importance: high
+            priority: high
+            ttl: 0
+            notification_icon: >
+              {% if threshold_mode == 'above' %}
+              mdi:fire
+              {% else %}
+              mdi:snowflake-alert
+              {% endif %}
+
+  # HA persistent
+  - if: "{{ enable_ha_notification }}"
+    then:
+      - service: persistent_notification.create
+        data:
+          notification_id: !input ha_notification_id
+          title: "{{ ha_notification_title_final }}"
+          message: "{{ ha_alarm_final }}"
+
+  # Vlastní akce
+  - choose:
+      - conditions: "{{ true }}"
+        sequence: !input actions
+
+  # Cooldown
+  - delay:
+      minutes: "{{ cooldown_minutes }}"
+
+mode: single
+max_exceeded: silent
