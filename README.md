@@ -1,4 +1,4 @@
-# 🔥 Fire Detection Blueprint v6 - SIMPLE & RELIABLE
+# 🔥 Fire Detection Blueprint
 
 Komplexní blueprint pro Home Assistant pro detekci požáru pomocí teplotních senzorů s automatickým vypínáním spotřebičů a pořizováním fotografií z kamer.
 
@@ -21,8 +21,7 @@ Komplexní blueprint pro Home Assistant pro detekci požáru pomocí teplotních
 - **Multi-sensor monitoring**: Sledování libovolného počtu teplotních senzorů současně
 - **Manuální ovládání**: Možnost vypnout alarm pomocí input_boolean
 
-### 🔌 Automatické vypínání spotřebičů (NOVÉ v6)
-- **Bezpečnostní shutdown**: Automatické vypnutí nebezpečných spotřebičů při alarmu
+### 🔌 Automatické vypínání spotřebičů - **Bezpečnostní shutdown**: Automatické vypnutí nebezpečných spotřebičů při alarmu
 - **Podporované entity**:
   - Vypínače (switch)
   - Světla (light)
@@ -33,8 +32,7 @@ Komplexní blueprint pro Home Assistant pro detekci požáru pomocí teplotních
 - **Logování**: Každé vypnutí se zaznamená do Home Assistant logbooku
 - **Okamžitá reakce**: Spotřebiče se vypnou ihned po potvrzení alarmu
 
-### 📸 Camera Snapshots (NOVÉ v6)
-- **Automatické snímky**: Pořízení fotografií z vybraných kamer při alarmu
+### 📸 Camera Snapshots - **Automatické snímky**: Pořízení fotografií z vybraných kamer při alarmu
 - **Telegram integrace**: Okamžité odeslání fotek přes Telegram
 - **Multiple cameras**: Podpora libovolného počtu kamer
 - **Konfigurovatelný delay**: Nastavitelná prodleva mezi snímky (0.5-10s)

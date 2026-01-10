@@ -1,6 +1,6 @@
 blueprint:
-  name: High Temperature Fire Detection v6 - SIMPLE & RELIABLE
-  description: Fire detection using time-based polling - reliable and simple with appliance shutdown and camera snapshots
+  name: Fire Detection Blueprint
+  description: Fire detection using time-based polling with appliance shutdown and camera snapshots
   domain: automation
   source_url: https://github.com/your-repo/fire-detection-blueprint
 
