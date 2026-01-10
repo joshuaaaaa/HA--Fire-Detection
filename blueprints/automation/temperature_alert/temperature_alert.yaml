@@ -125,9 +125,7 @@ blueprint:
     telegram_message_above:
       name: Telegram Message (Above Threshold)
       description: Message when temperature goes ABOVE threshold
-      default: |
-        🔥 VYSOKÁ TEPLOTA! 🔥
-        ⚠️ Teplota překročila horní limit!
+      default: "🔥 VYSOKÁ TEPLOTA! 🔥\n⚠️ Teplota překročila horní limit!"
       selector:
         text:
           multiline: true
@@ -135,9 +133,7 @@ blueprint:
     telegram_message_below:
       name: Telegram Message (Below Threshold)
       description: Message when temperature goes BELOW threshold
-      default: |
-        ❄️ NÍZKÁ TEPLOTA! ❄️
-        ⚠️ Riziko zamrznutí!
+      default: "❄️ NÍZKÁ TEPLOTA! ❄️\n⚠️ Riziko zamrznutí!"
       selector:
         text:
           multiline: true
@@ -414,63 +410,6 @@ variables:
     {% endif %}
     {{ temps | min | round(1) if temps | length > 0 else 0 }}
 
-  # Zprávy
-  telegram_alarm_final: >
-    {% if threshold_mode == 'above' %}
-      {{ telegram_message_above }}
-    {% else %}
-      {{ telegram_message_below }}
-    {% endif %}
-
-    🌡️ Senzory: {{ alarm_sensors }}
-    📈 Počet: {{ alarm_sensor_count }}
-    {% if threshold_mode == 'above' %}
-    🔥 Max: {{ max_temperature }}°C (práh: {{ threshold }}°C)
-    {% else %}
-    ❄️ Min: {{ min_temperature }}°C (práh: {{ threshold }}°C)
-    {% endif %}
-    ⏰ {{ now().strftime('%H:%M:%S %d.%m.%Y') }}
-
-  mobile_title_final: >
-    {% if threshold_mode == 'above' %}
-      {{ mobile_title_above }}
-    {% else %}
-      {{ mobile_title_below }}
-    {% endif %}
-
-  mobile_message_final: >
-    {% if threshold_mode == 'above' %}
-      {{ mobile_message_above }}
-    {% else %}
-      {{ mobile_message_below }}
-    {% endif %}
-    Senzory: {{ alarm_sensors }}
-    {% if threshold_mode == 'above' %}
-    Max: {{ max_temperature }}°C
-    {% else %}
-    Min: {{ min_temperature }}°C
-    {% endif %}
-
-  ha_notification_title_final: >
-    {% if threshold_mode == 'above' %}
-      {{ ha_notification_title_above }}
-    {% else %}
-      {{ ha_notification_title_below }}
-    {% endif %}
-
-  ha_alarm_final: >
-    **Teplotní alarm!**
-
-    **Režim:** {% if threshold_mode == 'above' %}Nad prahem{% else %}Pod prahem{% endif %}
-    **Práh:** {{ threshold }}°C
-    **Senzory:** {{ alarm_sensors }}
-    **Počet:** {{ alarm_sensor_count }}
-    {% if threshold_mode == 'above' %}
-    **Max:** {{ max_temperature }}°C
-    {% else %}
-    **Min:** {{ min_temperature }}°C
-    {% endif %}
-    **Čas:** {{ now().strftime('%H:%M:%S %d.%m.%Y') }}
 
 # TIME PATTERN - kontroluje každých 60 sekund
 trigger:
@@ -545,15 +484,45 @@ action:
     then:
       - service: "{{ telegram_service }}"
         data:
-          message: "{{ telegram_alarm_final }}"
+          message: >
+            {% if threshold_mode == 'above' %}
+              {{ telegram_message_above }}
+            {% else %}
+              {{ telegram_message_below }}
+            {% endif %}
+
+            🌡️ Senzory: {% set r = namespace(list=[]) %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temp = s.state | float %}{% if threshold_mode == 'above' and temp > threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% elif threshold_mode == 'below' and temp < threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% endif %}{% endif %}{% endfor %}{% endif %}{{ r.list | join(', ') }}
+            📈 Počet: {% set count = 0 %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temp = s.state | float %}{% if threshold_mode == 'above' and temp > threshold %}{% set count = count + 1 %}{% elif threshold_mode == 'below' and temp < threshold %}{% set count = count + 1 %}{% endif %}{% endif %}{% endfor %}{% endif %}{{ count }}
+            {% if threshold_mode == 'above' %}
+            🔥 Max: {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | max | round(1) if temps | length > 0 else 0 }}°C (práh: {{ threshold }}°C)
+            {% else %}
+            ❄️ Min: {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | min | round(1) if temps | length > 0 else 0 }}°C (práh: {{ threshold }}°C)
+            {% endif %}
+            ⏰ {{ now().strftime('%H:%M:%S %d.%m.%Y') }}
 
   # Mobile
   - if: "{{ enable_mobile }}"
     then:
       - service: !input mobile_service
         data:
-          title: "{{ mobile_title_final }}"
-          message: "{{ mobile_message_final }}"
+          title: >
+            {% if threshold_mode == 'above' %}
+              {{ mobile_title_above }}
+            {% else %}
+              {{ mobile_title_below }}
+            {% endif %}
+          message: >
+            {% if threshold_mode == 'above' %}
+              {{ mobile_message_above }}
+            {% else %}
+              {{ mobile_message_below }}
+            {% endif %}
+            Senzory: {% set r = namespace(list=[]) %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temp = s.state | float %}{% if threshold_mode == 'above' and temp > threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% elif threshold_mode == 'below' and temp < threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% endif %}{% endif %}{% endfor %}{% endif %}{{ r.list | join(', ') }}
+            {% if threshold_mode == 'above' %}
+            Max: {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | max | round(1) if temps | length > 0 else 0 }}°C
+            {% else %}
+            Min: {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | min | round(1) if temps | length > 0 else 0 }}°C
+            {% endif %}
           data:
             channel: !input mobile_channel
             importance: high
@@ -572,8 +541,25 @@ action:
       - service: persistent_notification.create
         data:
           notification_id: !input ha_notification_id
-          title: "{{ ha_notification_title_final }}"
-          message: "{{ ha_alarm_final }}"
+          title: >
+            {% if threshold_mode == 'above' %}
+              {{ ha_notification_title_above }}
+            {% else %}
+              {{ ha_notification_title_below }}
+            {% endif %}
+          message: >
+            **Teplotní alarm!**
+
+            **Režim:** {% if threshold_mode == 'above' %}Nad prahem{% else %}Pod prahem{% endif %}
+            **Práh:** {{ threshold }}°C
+            **Senzory:** {% set r = namespace(list=[]) %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temp = s.state | float %}{% if threshold_mode == 'above' and temp > threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% elif threshold_mode == 'below' and temp < threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% endif %}{% endif %}{% endfor %}{% endif %}{{ r.list | join(', ') }}
+            **Počet:** {% set count = 0 %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temp = s.state | float %}{% if threshold_mode == 'above' and temp > threshold %}{% set count = count + 1 %}{% elif threshold_mode == 'below' and temp < threshold %}{% set count = count + 1 %}{% endif %}{% endif %}{% endfor %}{% endif %}{{ count }}
+            {% if threshold_mode == 'above' %}
+            **Max:** {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | max | round(1) if temps | length > 0 else 0 }}°C
+            {% else %}
+            **Min:** {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | min | round(1) if temps | length > 0 else 0 }}°C
+            {% endif %}
+            **Čas:** {{ now().strftime('%H:%M:%S %d.%m.%Y') }}
 
   # Vlastní akce
   - choose:
