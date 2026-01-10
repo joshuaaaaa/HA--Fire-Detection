@@ -69,7 +69,7 @@ Komplexní blueprint pro Home Assistant pro detekci požáru pomocí teplotních
 3. Klikněte na **Import Blueprint** (pravý dolní roh)
 4. Vložte URL:
    ```
-   https://github.com/joshuaaaaa/HA-Hori/blob/claude/fire-detection-blueprint-cx6Ql/blueprints/automation/fire_detection/fire_detection_v6.yaml
+   https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-blueprint-cx6Ql/blueprints/automation/fire_detection/fire_detection_v6.yaml
    ```
 5. Klikněte na **Preview** a poté **Import**
 

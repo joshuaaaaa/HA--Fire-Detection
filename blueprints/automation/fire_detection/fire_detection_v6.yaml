@@ -2,7 +2,7 @@ blueprint:
   name: Fire Detection Blueprint
   description: Fire detection using time-based polling with appliance shutdown and camera snapshots
   domain: automation
-  source_url: https://github.com/your-repo/fire-detection-blueprint
+  source_url: https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-blueprint-cx6Ql/blueprints/automation/fire_detection/fire_detection_v6.yaml
 
   input:
     threshold:

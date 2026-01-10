@@ -39,7 +39,7 @@ Univerzální blueprint pro monitoring teplot s alarmy pro VYSOKÉ (požár, př
 2. Klikněte na **Import Blueprint**
 3. Vložte URL:
    ```
-   https://github.com/joshuaaaaa/HA-Hori/blob/main/blueprints/automation/temperature_alert/temperature_alert.yaml
+   https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-blueprint-cx6Ql/blueprints/automation/temperature_alert/temperature_alert.yaml
    ```
 4. Klikněte **Preview** a **Import**
 

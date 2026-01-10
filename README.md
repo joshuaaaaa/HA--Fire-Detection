@@ -19,7 +19,7 @@ Komplexní systém pro detekci požáru pomocí teplotních senzorů s automatic
 
 **Instalace:**
 ```
-https://github.com/joshuaaaaa/HA-Hori/blob/main/blueprints/automation/fire_detection/fire_detection_v6.yaml
+https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-blueprint-cx6Ql/blueprints/automation/fire_detection/fire_detection_v6.yaml
 ```
 
 [📖 Kompletní dokumentace](./blueprints/automation/fire_detection/README.md) | [💡 Příklady](./examples/)
@@ -45,7 +45,7 @@ Univerzální teplotní monitoring s alarmy pro VYSOKÉ (požár, přehřátí) 
 
 **Instalace:**
 ```
-https://github.com/joshuaaaaa/HA-Hori/blob/main/blueprints/automation/temperature_alert/temperature_alert.yaml
+https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-blueprint-cx6Ql/blueprints/automation/temperature_alert/temperature_alert.yaml
 ```
 
 [📖 Kompletní dokumentace](./blueprints/automation/temperature_alert/README.md) | [💡 Příklady](./examples/temperature_alert/)
@@ -73,7 +73,7 @@ Univerzální blueprint pro automatické blikání/pulzování zařízení s př
 
 **Instalace:**
 ```
-https://github.com/joshuaaaaa/HA-Hori/blob/main/blueprints/automation/blink_flash/blink_flash.yaml
+https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-blueprint-cx6Ql/blueprints/automation/blink_flash/blink_flash.yaml
 ```
 
 [📖 Kompletní dokumentace](./blueprints/automation/blink_flash/README.md) | [💡 Příklady](./examples/blink_flash/)

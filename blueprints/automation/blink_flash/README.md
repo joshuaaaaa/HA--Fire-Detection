@@ -56,7 +56,7 @@ Po skončení blikání můžete zvolit:
 2. Klikněte na **Import Blueprint**
 3. Vložte URL:
    ```
-   https://github.com/joshuaaaaa/HA-Hori/blob/main/blueprints/automation/blink_flash/blink_flash.yaml
+   https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-blueprint-cx6Ql/blueprints/automation/blink_flash/blink_flash.yaml
    ```
 4. Klikněte **Preview** a **Import**
 
