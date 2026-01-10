@@ -1,0 +1,31 @@
+# Příklad 3: Pomalé pulzování pro ozdobu/notifikaci
+# Světlo pomalu pulzuje když přijde notifikace
+
+alias: Notification Pulse - Slow
+description: Pomalé pulzování světla při notifikaci
+use_blueprint:
+  path: blink_flash/blink_flash.yaml
+  input:
+    # Notifikační světlo
+    target_entities:
+      entity_id:
+        - light.desk_lamp
+
+    # Trigger - když přijde nová notifikace
+    trigger_entity: sensor.unread_notifications
+    trigger_state: "1"  # Nebo jakýkoli stav > 0
+
+    # Pomalé pulzování - 2s zapnuto, 2s vypnuto
+    on_interval: 2.0
+    off_interval: 2.0
+
+    # Časově omezeno - 5 minut
+    duration_mode: limited
+    duration_time: 300
+
+    # Po skončení vypnout
+    end_state: "off"
+
+    # Světlo - modrá, střední jas
+    light_brightness: 128
+    light_color: [0, 100, 255]

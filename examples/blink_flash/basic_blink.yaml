@@ -1,0 +1,36 @@
+# Příklad 1: Základní blikání světla
+# Světlo bliká když je input_boolean zapnutý
+
+alias: Blink Light - Basic
+description: Základní blikání světla ovládané input_boolean
+use_blueprint:
+  path: blink_flash/blink_flash.yaml
+  input:
+    # Zařízení která budou blikat
+    target_entities:
+      entity_id:
+        - light.living_room
+
+    # Trigger - input_boolean
+    trigger_entity: input_boolean.blink_mode
+    trigger_state: "on"
+
+    # Časové intervaly - 0.5s zapnuto, 0.5s vypnuto
+    on_interval: 0.5
+    off_interval: 0.5
+
+    # Neomezená doba - běží dokud je input_boolean zapnutý
+    duration_mode: unlimited
+
+    # Po skončení vypnout
+    end_state: "off"
+
+    # Nastavení světla - červená, plný jas
+    light_brightness: 255
+    light_color: [255, 0, 0]
+
+# Potřebujete vytvořit input_boolean:
+# input_boolean:
+#   blink_mode:
+#     name: Blikací režim
+#     icon: mdi:lightbulb-on

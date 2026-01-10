@@ -1,0 +1,32 @@
+# Příklad 4: Blikání s počtem opakování (doorbell)
+# Světlo blikne 3x když někdo zvoní
+
+alias: Doorbell Blink - Count
+description: Světlo blikne 3x když někdo zvoní
+use_blueprint:
+  path: blink_flash/blink_flash.yaml
+  input:
+    # Světla u vchodu a v obýváku
+    target_entities:
+      entity_id:
+        - light.entrance
+        - light.living_room
+
+    # Trigger - zvonek
+    trigger_entity: binary_sensor.doorbell
+    trigger_state: "on"
+
+    # Blikání - 1s zapnuto, 0.5s vypnuto
+    on_interval: 1.0
+    off_interval: 0.5
+
+    # Počet opakování - 3x
+    duration_mode: count
+    repeat_count: 3
+
+    # Po skončení obnovit původní stav
+    end_state: restore
+
+    # Světla - žlutá, plný jas
+    light_brightness: 255
+    light_color: [255, 200, 0]

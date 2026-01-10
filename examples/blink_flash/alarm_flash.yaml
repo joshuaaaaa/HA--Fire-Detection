@@ -1,0 +1,38 @@
+# Příklad 2: Rychlé blikání pro alarm/varování
+# Světla rychle blikají při alarmu po dobu 2 minut
+
+alias: Alarm Flash - Fast Warning
+description: Rychlé blikání světel při alarmu
+use_blueprint:
+  path: blink_flash/blink_flash.yaml
+  input:
+    # Všechna světla v domě
+    target_entities:
+      entity_id:
+        - light.living_room
+        - light.bedroom
+        - light.kitchen
+        - light.hallway
+
+    # Trigger - alarm systém
+    trigger_entity: alarm_control_panel.home_alarm
+    trigger_state: "triggered"
+
+    # Rychlé blikání - 0.2s zapnuto, 0.2s vypnuto
+    on_interval: 0.2
+    off_interval: 0.2
+
+    # Časově omezeno - 120 sekund (2 minuty)
+    duration_mode: limited
+    duration_time: 120
+
+    # Po skončení obnovit původní stav
+    end_state: restore
+
+    # Světla - červená, plný jas
+    light_brightness: 255
+    light_color: [255, 0, 0]
+
+    # Podmínka - běží jen když je doma někdo
+    condition_entity: binary_sensor.someone_home
+    condition_state: "on"

@@ -1,280 +1,97 @@
-# 🔥 Fire Detection Blueprint
+# 🏠 HA-Hori - Home Assistant Blueprints Collection
 
-Komplexní blueprint pro Home Assistant pro detekci požáru pomocí teplotních senzorů s automatickým vypínáním spotřebičů a pořizováním fotografií z kamer.
+Sbírka užitečných a spolehlivých blueprintů pro Home Assistant. Každý blueprint je pečlivě navržen, otestován a dokumentován.
 
-## 📋 Obsah
+## 📦 Dostupné Blueprinty
 
-- [Hlavní funkce](#-hlavní-funkce)
-- [Instalace](#-instalace)
-- [Konfigurace](#-konfigurace)
-- [Příklady použití](#-příklady-použití)
-- [Troubleshooting](#-troubleshooting)
-- [FAQ](#-faq)
-- [Changelog](#-changelog)
+### 🔥 [Fire Detection Blueprint](./blueprints/automation/fire_detection/)
 
-## ✨ Hlavní funkce
+Komplexní systém pro detekci požáru pomocí teplotních senzorů s automatickým vypínáním spotřebičů a pořizováním fotografií z kamer.
 
-### 🌡️ Pokročilá detekce požáru
-- **Time-based polling**: Kontrola každých 10 sekund pro spolehlivou detekci
-- **Konfigurovatelný práh teploty**: Nastavte limit v °C pro spuštění alarmu
-- **Minimální doba trvání**: Prevence falešných poplachů - teplota musí být nad prahem po stanovenou dobu
-- **Multi-sensor monitoring**: Sledování libovolného počtu teplotních senzorů současně
-- **Manuální ovládání**: Možnost vypnout alarm pomocí input_boolean
+**Hlavní funkce:**
+- 🌡️ Multi-sensor teplotní monitoring s konfigurovatelným prahem
+- 🔌 Automatické vypínání nebezpečných spotřebičů při alarmu
+- 📸 Camera snapshots s odesláním do Telegramu
+- 🚨 Vizuální alarmy (blikající světla, 3 režimy)
+- 📱 Multiple notification channels (Telegram, mobile, HA)
+- 📢 TTS hlášení přes reproduktory
+- 🔔 Sirény a zvukové alarmy
 
-### 🔌 Automatické vypínání spotřebičů - **Bezpečnostní shutdown**: Automatické vypnutí nebezpečných spotřebičů při alarmu
-- **Podporované entity**:
-  - Vypínače (switch)
-  - Světla (light)
-  - Klimatizace (climate)
-  - Ohřívače vody/bojlery (water_heater)
-  - Ventilátory (fan)
-  - Zvlhčovače (humidifier)
-- **Logování**: Každé vypnutí se zaznamená do Home Assistant logbooku
-- **Okamžitá reakce**: Spotřebiče se vypnou ihned po potvrzení alarmu
+**Instalace:**
+```
+https://github.com/joshuaaaaa/HA-Hori/blob/main/blueprints/automation/fire_detection/fire_detection_v6.yaml
+```
 
-### 📸 Camera Snapshots - **Automatické snímky**: Pořízení fotografií z vybraných kamer při alarmu
-- **Telegram integrace**: Okamžité odeslání fotek přes Telegram
-- **Multiple cameras**: Podpora libovolného počtu kamer
-- **Konfigurovatelný delay**: Nastavitelná prodleva mezi snímky (0.5-10s)
-- **Časové razítko**: Každý snapshot obsahuje datum a čas
-- **Popisky**: Fotky obsahují název kamery a typ alarmu
+[📖 Kompletní dokumentace](./blueprints/automation/fire_detection/README.md) | [💡 Příklady](./examples/)
 
-### 🚨 Vizuální a zvukové alarmy
-- **Světelný alarm**:
-  - 3 režimy: Blikání, Pulzování, Konstantní svícení
-  - Volitelná barva (RGB)
-  - Nastavitelná rychlost blikání
-  - Obnovení předchozího stavu po alarmu
-- **Siréna/zvukový alarm**: Podpora switch, siren a alarm_control_panel
-- **TTS oznámení**: Hlasové varování přes media player/reproduktory
+---
 
-### 📱 Notifikace
-- **Telegram**: Detailní zprávy s informacemi o senzorech, teplotách a čase
-- **Mobile app**: Push notifikace s vysokou prioritou
-- **Persistent notification**: Trvalé notifikace v Home Assistant UI
-- **Cooldown**: Ochrana před spamováním - konfigurovatelná prodleva mezi notifikacemi
+### 💡 [Blink/Flash Device Controller](./blueprints/automation/blink_flash/)
 
-### 🎯 Další funkce
-- **Vlastní akce**: Přidejte libovolné další akce při alarmu
-- **Single mode**: Zamezení duplicitních spuštění
-- **Smart templates**: Pokročilé šablony pro detekci a zprávy
-- **Čeština**: Plná podpora českého jazyka
+Univerzální blueprint pro automatické blikání/pulzování zařízení s přesným časovým řízením.
 
-## 📦 Instalace
+**Hlavní funkce:**
+- 💡 Podpora světel, vypínačů, ventilátorů, sirén
+- ⏱️ Nezávislé ON/OFF intervaly (0.1 - 3600 sekund)
+- 🔄 3 režimy: Neomezené, Časově omezené, Počet opakování
+- 🎨 Nastavitelná barva a jas pro světla
+- 🔚 Konečný stav: Vypnout, Zapnout, nebo Obnovit původní
+- 🎯 Volitelný trigger a podmínky
+- 🚀 Restart mode pro okamžitou reakci
 
-### Metoda 1: Import přes URL (Doporučeno)
+**Použití:**
+- 🚨 Alarmy a varování (rychlé červené blikání)
+- 🔔 Notifikace (pulzující světla)
+- 🎉 Efekty a zábava (barevné vzory)
+- 🏠 Upozornění (doorbell, timer)
+
+**Instalace:**
+```
+https://github.com/joshuaaaaa/HA-Hori/blob/main/blueprints/automation/blink_flash/blink_flash.yaml
+```
+
+[📖 Kompletní dokumentace](./blueprints/automation/blink_flash/README.md) | [💡 Příklady](./examples/blink_flash/)
+
+---
+
+## 🚀 Rychlý Start
+
+### 1. Import Blueprintu
 
 1. Otevřete Home Assistant
 2. Přejděte do **Settings** → **Automations & Scenes** → **Blueprints**
 3. Klikněte na **Import Blueprint** (pravý dolní roh)
-4. Vložte URL:
-   ```
-   https://github.com/joshuaaaaa/HA-Hori/blob/claude/fire-detection-blueprint-cx6Ql/blueprints/automation/fire_detection/fire_detection_v6.yaml
-   ```
-5. Klikněte na **Preview** a poté **Import**
+4. Vložte URL blueprintu (viz výše)
+5. Klikněte **Preview** a **Import**
 
-### Metoda 2: Manuální kopírování
+### 2. Vytvoření Automatizace
 
-1. Stáhněte soubor `fire_detection_v6.yaml`
-2. Zkopírujte ho do složky:
-   ```
-   /config/blueprints/automation/fire_detection/
-   ```
-3. Restartujte Home Assistant nebo znovu načtěte blueprinty
+1. Přejděte do **Automations & Scenes** → **Automations**
+2. Klikněte **Create Automation** → **Create from Blueprint**
+3. Vyberte importovaný blueprint
+4. Nakonfigurujte podle svých potřeb
+5. Uložte a otestujte
 
-## ⚙️ Konfigurace
+### 3. Použijte Příklady
 
-### 1️⃣ Základní nastavení
+Všechny blueprinty mají příklady v složce [`examples/`](./examples/). Zkopírujte, upravte a použijte!
 
-#### Teplotní práh
-```yaml
-threshold: 60  # °C - Teplota pro spuštění alarmu
-```
-- **Doporučeno pro domácnost**: 50-70°C
-- **Pro kuchyň/saunu**: 80-100°C
-- **Pro sklady/garáže**: 40-60°C
+## 📚 Dokumentace
 
-#### Sledované senzory
-```yaml
-include:
-  - sensor.kitchen_temperature
-  - sensor.living_room_temperature
-  - sensor.bedroom_temperature
-```
-Vyberte všechny teplotní senzory, které chcete monitorovat.
+Každý blueprint má vlastní detailní dokumentaci:
 
-#### Minimální doba trvání
-```yaml
-minimum_duration: 30  # sekund
-```
-Jak dlouho musí teplota zůstat nad prahem před spuštěním alarmu. Prevence falešných poplachů.
+- **README.md** - Kompletní průvodce s příklady
+- **Příklady** - Ready-to-use konfigurace
+- **Troubleshooting** - Řešení běžných problémů
+- **FAQ** - Odpovědi na časté otázky
 
-#### Cooldown notifikací
-```yaml
-cooldown_minutes: 5  # minut
-```
-Minimální doba mezi opakovanými notifikacemi při trvajícím alarmu.
+## 💡 Příklady Použití
 
-### 2️⃣ Automatické vypínání spotřebičů
-
-#### Zapnutí funkce
-```yaml
-enable_appliance_shutdown: true
-```
-
-#### Výběr spotřebičů
-```yaml
-appliance_entities:
-  entity_id:
-    - switch.electric_kettle
-    - switch.space_heater
-    - climate.air_conditioner
-    - water_heater.boiler
-    - switch.coffee_maker
-    - fan.ceiling_fan
-```
-
-**Doporučené spotřebiče k vypnutí:**
-- ☕ Kávovar, rychlovarná konvice
-- 🔥 Elektrické kamna, topení
-- 💧 Bojler, ohřívač vody
-- 🌡️ Klimatizace, tepelné čerpadlo
-- 🍳 Varná konvice (pokud je chytrá)
-- 💨 Ventilátory (prevence šíření kouře)
-
-### 3️⃣ Camera Snapshots
-
-#### Zapnutí funkce
-```yaml
-enable_camera_snapshot: true
-enable_telegram: true  # Nutné pro odesílání fotek
-```
-
-#### Výběr kamer
-```yaml
-camera_entities:
-  - camera.kitchen
-  - camera.living_room
-  - camera.garage
-  - camera.hallway
-```
-
-#### Nastavení snímkování
-```yaml
-camera_snapshot_delay: 1  # sekundy mezi snapshoty
-```
-
-**Tip**: Kratší delay (0.5s) pro rychlé pořízení všech fotek, delší delay (2-5s) pokud máte pomalé kamery nebo slabší síť.
-
-### 4️⃣ Telegram notifikace
-
-#### Základní konfigurace
-```yaml
-enable_telegram: true
-telegram_service: notify.telegram  # Váš Telegram service
-```
-
-#### Vlastní zpráva
-```yaml
-telegram_message: |
-  🔥 POŽÁRNÍ POPLACH! 🔥
-  ⚠️ Detekována vysoká teplota!
-  🏠 Kontrolujte prosím dům!
-```
-
-Zpráva se automaticky doplní o:
-- 🌡️ Seznam senzorů nad prahem s teplotami
-- 📈 Počet alarmových senzorů
-- 🔥 Maximální naměřenou teplotu
-- ⏰ Čas spuštění alarmu
-- 📸 Fotky z kamer (pokud je funkce zapnutá)
-
-### 5️⃣ Světelný alarm
-
-#### Zapnutí a režim
-```yaml
-enable_light_alarm: true
-light_mode: blink  # blink | pulse | solid
-```
-
-**Režimy:**
-- `blink` - Blikání (zapnuto/vypnuto)
-- `pulse` - Pulzování (plná jas ↔ 20% jas)
-- `solid` - Konstantní svícení
-
-#### Barva a jas
-```yaml
-light_color: [255, 0, 0]  # RGB - červená
-light_brightness: 255     # 0-255
-blink_speed: 0.5         # sekundy
-```
-
-**Doporučené barvy:**
-- 🔴 Červená `[255, 0, 0]` - Požár (výchozí)
-- 🟠 Oranžová `[255, 165, 0]` - Varování
-- 🟡 Žlutá `[255, 255, 0]` - Pozor
-
-#### Obnovení stavu
-```yaml
-restore_lights: true  # Vrátit původní stav světel po alarmu
-```
-
-### 6️⃣ Zvukové alarmy
-
-#### Siréna
-```yaml
-enable_sirens: true
-siren_entities:
-  entity_id:
-    - switch.alarm_siren
-    - siren.outdoor_alarm
-```
-
-#### TTS oznámení
-```yaml
-enable_media_player: true
-tts_service: tts.google_translate_say
-tts_language: cs
-tts_alarm_message: "Pozor! Požární poplach! Detekována vysoká teplota!"
-
-media_player_entities:
-  entity_id:
-    - media_player.living_room_speaker
-    - media_player.bedroom_speaker
-```
-
-### 7️⃣ Mobile App notifikace
+### Fire Detection Blueprint
 
 ```yaml
-enable_mobile: true
-mobile_service: notify.mobile_app_phone
-mobile_title: "🔥 POŽÁRNÍ POPLACH!"
-mobile_message: "⚠️ Detekována vysoká teplota!"
-mobile_channel: alarm  # Android notification channel
-```
-
-### 8️⃣ Manuální ovládání
-
-```yaml
-alarm_control: input_boolean.fire_alarm_enabled
-```
-
-Vytvořte `input_boolean`:
-```yaml
-input_boolean:
-  fire_alarm_enabled:
-    name: Požární alarm aktivní
-    initial: on
-    icon: mdi:fire-alert
-```
-
-## 💡 Příklady použití
-
-### Příklad 1: Základní domácí ochrana
-
-```yaml
+# Základní požární ochrana
 alias: Fire Detection - Basic Home
-description: Základní požární ochrana pro domácnost
 use_blueprint:
   path: fire_detection/fire_detection_v6.yaml
   input:
@@ -282,207 +99,120 @@ use_blueprint:
     include:
       - sensor.kitchen_temperature
       - sensor.living_room_temperature
-    minimum_duration: 30
     enable_telegram: true
-    telegram_service: notify.telegram
     enable_light_alarm: true
-    light_entities:
-      entity_id:
-        - light.living_room
-        - light.bedroom
-    light_mode: blink
 ```
 
-### Příklad 2: Kompletní ochrana s vypínáním spotřebičů
+### Blink/Flash Blueprint
 
 ```yaml
-alias: Fire Detection - Full Protection
-description: Plná ochrana s auto-vypínáním a kamerami
+# Blikající světlo při alarmu
+alias: Alarm Flash
 use_blueprint:
-  path: fire_detection/fire_detection_v6.yaml
+  path: blink_flash/blink_flash.yaml
   input:
-    threshold: 60
-    include:
-      - sensor.kitchen_temperature
-      - sensor.living_room_temperature
-      - sensor.garage_temperature
-    minimum_duration: 20
-
-    # Vypínání spotřebičů
-    enable_appliance_shutdown: true
-    appliance_entities:
-      entity_id:
-        - switch.electric_kettle
-        - switch.space_heater
-        - water_heater.boiler
-        - climate.air_conditioner
-
-    # Camera snapshots
-    enable_camera_snapshot: true
-    camera_entities:
-      - camera.kitchen
-      - camera.living_room
-      - camera.garage
-    camera_snapshot_delay: 1
-
-    # Alarmy
-    enable_sirens: true
-    siren_entities:
-      entity_id:
-        - switch.alarm_siren
-
-    enable_light_alarm: true
-    light_entities:
-      entity_id:
-        - light.all_lights
-    light_mode: blink
-
-    # Notifikace
-    enable_telegram: true
-    telegram_service: notify.telegram
-
-    enable_mobile: true
-    mobile_service: notify.mobile_app_iphone
+    target_entities:
+      entity_id: light.living_room
+    trigger_entity: alarm_control_panel.home
+    trigger_state: "triggered"
+    on_interval: 0.2
+    off_interval: 0.2
+    duration_mode: unlimited
 ```
 
-### Příklad 3: Noční režim (tichý)
+## 🔧 Struktura Repozitáře
 
-```yaml
-alias: Fire Detection - Night Mode
-description: Noční režim bez sirény a TTS
-use_blueprint:
-  path: fire_detection/fire_detection_v6.yaml
-  input:
-    threshold: 55
-    include:
-      - sensor.bedroom_temperature
-    minimum_duration: 15
-
-    # Jen světla a notifikace
-    enable_light_alarm: true
-    light_mode: pulse
-    light_brightness: 128  # Poloviční jas v noci
-
-    enable_telegram: true
-    enable_mobile: true
-
-    # BEZ sirény a TTS
-    enable_sirens: false
-    enable_media_player: false
 ```
-
-## 🔧 Troubleshooting
-
-### Problém: Blueprint nefunguje, alarm se nespouští
-
-**Řešení:**
-1. Zkontrolujte že teplotní senzory jsou typu `device_class: temperature`
-2. Ověřte že senzory vrací platné hodnoty (ne `unknown` nebo `unavailable`)
-3. Zkontrolujte že `alarm_control` input_boolean je `on` (pokud je nastavený)
-4. Sledujte logbook při spuštění alarmu
-
-### Problém: Camera snapshots se neukládají
-
-**Řešení:**
-1. Ověřte že složka `/config/www/` existuje a má správná oprávnění
-2. Zkontrolujte že kamery fungují a jsou dostupné
-3. Otestujte ručně: `Developer Tools` → `Services` → `camera.snapshot`
-4. Zkontrolujte logy Home Assistanta pro chyby
-
-### Problém: Telegram fotky se neodesílají
-
-**Řešení:**
-1. Ověřte že Telegram integrace funguje (otestujte normální notifikaci)
-2. Zkontrolujte že `enable_camera_snapshot: true` A `enable_telegram: true`
-3. Ověřte že snapshoty se ukládají (viz předchozí problém)
-4. Zkontrolujte že Telegram service má správný název (např. `notify.telegram`)
-
-### Problém: Spotřebiče se nevypínají
-
-**Řešení:**
-1. Zkontrolujte že `enable_appliance_shutdown: true`
-2. Ověřte že vybrané entity existují a jsou dostupné
-3. Otestujte ručně vypnutí entity přes UI
-4. Zkontrolujte logbook - měla by být zpráva o bezpečnostním vypnutí
-
-### Problém: Falešné alarmy
-
-**Řešení:**
-1. Zvyšte `threshold` (práh teploty)
-2. Prodlužte `minimum_duration` (minimální dobu trvání)
-3. Odeberte problematické senzory (např. blízko sporáku)
-4. Zkontrolujte kalibraci teplotních senzorů
-
-### Problém: Notifikace přichází příliš často
-
-**Řešení:**
-1. Zvyšte `cooldown_minutes` (např. na 10-15 minut)
-2. Zkontrolujte že teploty opravdu klesají pod práh mezi alarmymí
-
-## ❓ FAQ
-
-**Q: Jaký teplotní práh je vhodný?**
-A: Závisí na místnosti:
-- Obývací pokoj/ložnice: 50-60°C
-- Kuchyň: 70-80°C (vyšší kvůli vaření)
-- Sauna: 100-120°C
-- Garáž/sklad: 45-55°C
-
-**Q: Mohu použít více instancí blueprintu?**
-A: Ano! Můžete vytvořit několik automatizací s různými nastaveními (např. jedna pro kuchyň s vyšším prahem, druhá pro ložnice s nižším).
-
-**Q: Jak vypnout alarm manuálně?**
-A: Nastavte `alarm_control` input_boolean a přepněte ho na `off`. Také můžete vypnout celou automatizaci v UI.
-
-**Q: Funguje blueprint bez internetu?**
-A: Ano, kromě Telegram notifikací vše funguje lokálně. Camera snapshots se ukládají lokálně a lze je odeslat později.
-
-**Q: Kolik kamer mohu použít?**
-A: Neomezený počet, ale doporučujeme max 5-10 pro rychlost odesílání. Každá fotka se posílá samostatně do Telegramu.
-
-**Q: Jak dlouho trvá pořízení a odeslání fotek?**
-A: Závisí na počtu kamer a `camera_snapshot_delay`. Pro 3 kamery s delay 1s = cca 3 sekundy + čas uploadu do Telegramu (cca 1-2s na fotku).
-
-**Q: Můžu přidat vlastní akce?**
-A: Ano! Použijte pole `actions` pro libovolné další akce (např. vypnutí elektřiny, zavolání na mobil, etc.).
-
-**Q: Blueprint podporuje detektory kouře?**
-A: Aktuálně ne, ale plánujeme přidat v budoucí verzi jako dodatečný trigger.
-
-## 📝 Changelog
-
-### v6 (2026-01-10)
-- ✨ **NOVÉ**: Automatické vypínání spotřebičů při alarmu
-- ✨ **NOVÉ**: Camera snapshots s odesláním do Telegramu
-- 📝 Podpora pro switch, light, climate, water_heater, fan, humidifier
-- 📸 Multi-camera podpora s konfigurovatelným delay
-- 📊 Logování vypnutí spotřebičů do logbooku
-- 🐛 Vylepšené šablony a normalizace entit
-
-### v5 a starší
-- Základní detekce teploty
-- Světelný alarm (3 režimy)
-- TTS oznámení
-- Siréna podpora
-- Multiple notification channels
-- Cooldown ochrana
-
-## 📜 Licence
-
-MIT License - volně použitelné pro osobní i komerční účely.
+HA-Hori/
+├── README.md                                    # Tento soubor
+├── LICENSE                                      # MIT licence
+├── blueprints/
+│   └── automation/
+│       ├── fire_detection/
+│       │   ├── fire_detection_v6.yaml          # Fire Detection Blueprint
+│       │   └── README.md                        # Dokumentace
+│       └── blink_flash/
+│           ├── blink_flash.yaml                 # Blink/Flash Blueprint
+│           └── README.md                        # Dokumentace
+└── examples/
+    ├── basic_home_protection.yaml               # Fire: Základní ochrana
+    ├── full_protection_with_cameras.yaml        # Fire: Plná ochrana
+    ├── night_mode_quiet.yaml                    # Fire: Noční režim
+    ├── garage_workshop.yaml                     # Fire: Garáž/dílna
+    └── blink_flash/
+        ├── basic_blink.yaml                     # Blink: Základní
+        ├── alarm_flash.yaml                     # Blink: Alarm
+        ├── slow_pulse.yaml                      # Blink: Pomalé pulzování
+        └── doorbell_count.yaml                  # Blink: Zvonek
+```
 
 ## 🤝 Přispívání
 
 Návrhy, bugreporty a pull requesty jsou vítány!
 
-## 🔗 Odkazy
+### Jak přispět:
 
+1. Forkněte repozitář
+2. Vytvořte feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commitněte změny (`git commit -m 'Add some AmazingFeature'`)
+4. Pushněte do branche (`git push origin feature/AmazingFeature`)
+5. Otevřete Pull Request
+
+## 🐛 Bug Reports
+
+Pokud najdete problém:
+
+1. Zkontrolujte [Issues](https://github.com/joshuaaaaa/HA-Hori/issues) jestli už není nahlášen
+2. Vytvořte nový Issue s detaily:
+   - Blueprint který používáte
+   - Verze Home Assistant
+   - Popis problému
+   - Kroky k reprodukci
+   - Logy (pokud jsou relevantní)
+
+## ❓ FAQ
+
+### Q: Fungují blueprinty bez internetu?
+**A:** Ano, většina funkcí funguje lokálně. Výjimka: Telegram notifikace vyžadují internet.
+
+### Q: Mohu použít více blueprintů současně?
+**A:** Ano! Blueprinty jsou nezávislé a můžete jich mít libovolný počet.
+
+### Q: Jak aktualizuji blueprint?
+**A:** Prostě znovu importujte URL. HA automaticky aktualizuje existující automatizace.
+
+### Q: Jsou blueprinty kompatibilní se všemi verzemi HA?
+**A:** Testováno na HA 2024.1+. Starší verze mohou mít problémy s některými funkcemi.
+
+### Q: Mohu modifikovat blueprinty?
+**A:** Ano! MIT licence umožňuje libovolné úpravy. Můžete si je přizpůsobit podle potřeby.
+
+## 📊 Statistiky
+
+- **Počet blueprintů**: 2
+- **Celkem příkladů**: 8
+- **Podporované domény**: 10+ (light, switch, camera, sensor, atd.)
+- **Jazyk**: Čeština + Angličtina
+
+## 🔗 Užitečné odkazy
+
+- [Home Assistant](https://www.home-assistant.io/)
 - [Home Assistant Community](https://community.home-assistant.io/)
 - [Blueprint Documentation](https://www.home-assistant.io/docs/automation/using_blueprints/)
-- [GitHub Issues](https://github.com/joshuaaaaa/HA-Hori/issues)
+- [YAML Guide](https://www.home-assistant.io/docs/configuration/yaml/)
+
+## 📜 Licence
+
+MIT License - volně použitelné pro osobní i komerční účely.
+
+Viz [LICENSE](./LICENSE) pro detaily.
+
+## ⚠️ Důležité upozornění
+
+**Fire Detection Blueprint** je určen jako doplňková ochrana. Nenahrazuje profesionální požární hlásič, detektory kouře a hasicí přístroje. Vždy dodržujte místní požární předpisy a stavební normy.
 
 ---
 
-**⚠️ DŮLEŽITÉ UPOZORNĚNÍ**: Tento blueprint je určen jako **doplňková ochrana**. Nenahrazuje profesionální požární hlásič, detektory kouře a hasicí přístroje. Vždy dodržujte místní požární předpisy a stavební normy.
+**Vytvořeno s ❤️ pro Home Assistant komunitu**
 
-🔥 **Buďte v bezpečí!** 🔥
+🔥 Buďte v bezpečí! 💡 Buďte kreativní!
