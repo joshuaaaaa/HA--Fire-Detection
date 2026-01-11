@@ -97,7 +97,7 @@ blueprint:
         entity:
           multiple: true
           filter:
-            domain: camera
+            - domain: camera
 
     camera_snapshot_delay:
       name: Delay Between Camera Snapshots
