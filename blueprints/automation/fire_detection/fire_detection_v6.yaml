@@ -92,7 +92,7 @@ blueprint:
     camera_entities:
       name: Camera Entities
       description: Select cameras to capture snapshots (OPTIONAL - can be empty)
-      default: {}
+      default: []
       selector:
         entity:
           multiple: true
