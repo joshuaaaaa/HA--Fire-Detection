@@ -411,8 +411,13 @@ variables:
     {{ temps | min | round(1) if temps | length > 0 else 0 }}
 
 
-# TIME PATTERN - kontroluje každých 60 sekund
+# TRIGGER - reaguje na změnu teploty + pravidelná kontrola
 trigger:
+  # Okamžitá reakce při změně teploty
+  - trigger: state
+    entity_id: !input include
+
+  # Pravidelná kontrola každou minutu (backup + cooldown repeat)
   - trigger: time_pattern
     minutes: "/1"
 
