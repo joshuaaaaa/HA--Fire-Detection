@@ -33,11 +33,12 @@ blueprint:
 
     include:
       name: Monitored Temperature Sensors
-      description: Select temperature sensors to monitor
+      description: Select temperature sensors to monitor. Only entities are supported, devices must be expanded!
+      default:
+        entity_id: []
       selector:
-        entity:
-          multiple: true
-          filter:
+        target:
+          entity:
             device_class: temperature
 
     minimum_duration:
@@ -315,17 +316,9 @@ variables:
   tts_alarm_message_below: !input tts_alarm_message_below
   tts_language: !input tts_language
 
-  # Normalizace entity_id na vždy pole
-  include_entity_ids: >
-    {% if include is string %}
-      {{ [include] }}
-    {% else %}
-      {{ include }}
-    {% endif %}
-
   # Kontroly
   has_entities: >
-    {{ include_entity_ids is defined and include_entity_ids | length > 0 }}
+    {{ include.entity_id is defined and include.entity_id | length > 0 }}
 
   alarm_enabled: >
     {% if alarm_control is string and alarm_control != '' %}
@@ -351,7 +344,7 @@ variables:
     {% set r = namespace(list=[]) %}
     {% if has_entities %}
       {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
-        {% if s.entity_id in include_entity_ids
+        {% if s.entity_id in include.entity_id
            and s.state not in ['unknown','unavailable','none']
            and (s.state is number or s.state | float(-999) != -999) %}
           {% set temp = s.state | float %}
@@ -369,7 +362,7 @@ variables:
     {% set count = 0 %}
     {% if has_entities %}
       {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
-        {% if s.entity_id in include_entity_ids
+        {% if s.entity_id in include.entity_id
            and s.state not in ['unknown','unavailable','none']
            and (s.state is number or s.state | float(-999) != -999) %}
           {% set temp = s.state | float %}
@@ -388,7 +381,7 @@ variables:
     {% set temps = [] %}
     {% if has_entities %}
       {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
-        {% if s.entity_id in include_entity_ids
+        {% if s.entity_id in include.entity_id
            and s.state not in ['unknown','unavailable','none']
            and (s.state is number or s.state | float(-999) != -999) %}
           {% set temps = temps + [s.state | float] %}
@@ -401,7 +394,7 @@ variables:
     {% set temps = [] %}
     {% if has_entities %}
       {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
-        {% if s.entity_id in include_entity_ids
+        {% if s.entity_id in include.entity_id
            and s.state not in ['unknown','unavailable','none']
            and (s.state is number or s.state | float(-999) != -999) %}
           {% set temps = temps + [s.state | float] %}
@@ -499,12 +492,12 @@ action:
               {{ telegram_message_below }}
             {% endif %}
 
-            🌡️ Senzory: {% set r = namespace(list=[]) %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temp = s.state | float %}{% if threshold_mode == 'above' and temp > threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% elif threshold_mode == 'below' and temp < threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% endif %}{% endif %}{% endfor %}{% endif %}{{ r.list | join(', ') }}
-            📈 Počet: {% set count = 0 %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temp = s.state | float %}{% if threshold_mode == 'above' and temp > threshold %}{% set count = count + 1 %}{% elif threshold_mode == 'below' and temp < threshold %}{% set count = count + 1 %}{% endif %}{% endif %}{% endfor %}{% endif %}{{ count }}
+            🌡️ Senzory: {% set r = namespace(list=[]) %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include.entity_id and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temp = s.state | float %}{% if threshold_mode == 'above' and temp > threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% elif threshold_mode == 'below' and temp < threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% endif %}{% endif %}{% endfor %}{% endif %}{{ r.list | join(', ') }}
+            📈 Počet: {% set count = 0 %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include.entity_id and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temp = s.state | float %}{% if threshold_mode == 'above' and temp > threshold %}{% set count = count + 1 %}{% elif threshold_mode == 'below' and temp < threshold %}{% set count = count + 1 %}{% endif %}{% endif %}{% endfor %}{% endif %}{{ count }}
             {% if threshold_mode == 'above' %}
-            🔥 Max: {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | max | round(1) if temps | length > 0 else 0 }}°C (práh: {{ threshold }}°C)
+            🔥 Max: {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include.entity_id and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | max | round(1) if temps | length > 0 else 0 }}°C (práh: {{ threshold }}°C)
             {% else %}
-            ❄️ Min: {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | min | round(1) if temps | length > 0 else 0 }}°C (práh: {{ threshold }}°C)
+            ❄️ Min: {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include.entity_id and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | min | round(1) if temps | length > 0 else 0 }}°C (práh: {{ threshold }}°C)
             {% endif %}
             ⏰ {{ now().strftime('%H:%M:%S %d.%m.%Y') }}
 
@@ -525,11 +518,11 @@ action:
             {% else %}
               {{ mobile_message_below }}
             {% endif %}
-            Senzory: {% set r = namespace(list=[]) %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temp = s.state | float %}{% if threshold_mode == 'above' and temp > threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% elif threshold_mode == 'below' and temp < threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% endif %}{% endif %}{% endfor %}{% endif %}{{ r.list | join(', ') }}
+            Senzory: {% set r = namespace(list=[]) %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include.entity_id and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temp = s.state | float %}{% if threshold_mode == 'above' and temp > threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% elif threshold_mode == 'below' and temp < threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% endif %}{% endif %}{% endfor %}{% endif %}{{ r.list | join(', ') }}
             {% if threshold_mode == 'above' %}
-            Max: {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | max | round(1) if temps | length > 0 else 0 }}°C
+            Max: {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include.entity_id and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | max | round(1) if temps | length > 0 else 0 }}°C
             {% else %}
-            Min: {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | min | round(1) if temps | length > 0 else 0 }}°C
+            Min: {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include.entity_id and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | min | round(1) if temps | length > 0 else 0 }}°C
             {% endif %}
           data:
             channel: !input mobile_channel
@@ -560,12 +553,12 @@ action:
 
             **Režim:** {% if threshold_mode == 'above' %}Nad prahem{% else %}Pod prahem{% endif %}
             **Práh:** {{ threshold }}°C
-            **Senzory:** {% set r = namespace(list=[]) %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temp = s.state | float %}{% if threshold_mode == 'above' and temp > threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% elif threshold_mode == 'below' and temp < threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% endif %}{% endif %}{% endfor %}{% endif %}{{ r.list | join(', ') }}
-            **Počet:** {% set count = 0 %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temp = s.state | float %}{% if threshold_mode == 'above' and temp > threshold %}{% set count = count + 1 %}{% elif threshold_mode == 'below' and temp < threshold %}{% set count = count + 1 %}{% endif %}{% endif %}{% endfor %}{% endif %}{{ count }}
+            **Senzory:** {% set r = namespace(list=[]) %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include.entity_id and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temp = s.state | float %}{% if threshold_mode == 'above' and temp > threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% elif threshold_mode == 'below' and temp < threshold %}{% set r.list = r.list + [s.name ~ ' (' ~ temp ~ '°C)'] %}{% endif %}{% endif %}{% endfor %}{% endif %}{{ r.list | join(', ') }}
+            **Počet:** {% set count = 0 %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include.entity_id and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temp = s.state | float %}{% if threshold_mode == 'above' and temp > threshold %}{% set count = count + 1 %}{% elif threshold_mode == 'below' and temp < threshold %}{% set count = count + 1 %}{% endif %}{% endif %}{% endfor %}{% endif %}{{ count }}
             {% if threshold_mode == 'above' %}
-            **Max:** {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | max | round(1) if temps | length > 0 else 0 }}°C
+            **Max:** {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include.entity_id and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | max | round(1) if temps | length > 0 else 0 }}°C
             {% else %}
-            **Min:** {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include_entity_ids and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | min | round(1) if temps | length > 0 else 0 }}°C
+            **Min:** {% set temps = [] %}{% if has_entities %}{% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}{% if s.entity_id in include.entity_id and s.state not in ['unknown','unavailable','none'] and (s.state is number or s.state | float(-999) != -999) %}{% set temps = temps + [s.state | float] %}{% endif %}{% endfor %}{% endif %}{{ temps | min | round(1) if temps | length > 0 else 0 }}°C
             {% endif %}
             **Čas:** {{ now().strftime('%H:%M:%S %d.%m.%Y') }}
 
