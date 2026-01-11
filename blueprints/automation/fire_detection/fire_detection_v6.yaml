@@ -51,7 +51,7 @@ blueprint:
     alarm_control:
       name: Manual Alarm Control (Input Boolean)
       description: Optional input_boolean to manually disable alarm
-      default: {}
+      default: ""
       selector:
         entity:
           domain: input_boolean
