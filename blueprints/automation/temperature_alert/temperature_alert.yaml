@@ -477,16 +477,31 @@ action:
   # TTS hlášení
   - if: "{{ enable_media_player and has_media_players }}"
     then:
-      - service: "{{ tts_service }}"
-        data:
-          entity_id: "{{ media_player_entities_raw.entity_id }}"
-          message: >
-            {% if threshold_mode == 'above' %}
-              {{ tts_alarm_message_above }}
-            {% else %}
-              {{ tts_alarm_message_below }}
-            {% endif %}
-          language: "{{ tts_language }}"
+      - choose:
+          # Cloud TTS (bez language parametru)
+          - conditions: "{{ 'cloud' in tts_service }}"
+            sequence:
+              - service: "{{ tts_service }}"
+                data:
+                  entity_id: "{{ media_player_entities_raw.entity_id }}"
+                  message: >
+                    {% if threshold_mode == 'above' %}
+                      {{ tts_alarm_message_above }}
+                    {% else %}
+                      {{ tts_alarm_message_below }}
+                    {% endif %}
+        # Ostatní TTS služby (s language parametrem)
+        default:
+          - service: "{{ tts_service }}"
+            data:
+              entity_id: "{{ media_player_entities_raw.entity_id }}"
+              message: >
+                {% if threshold_mode == 'above' %}
+                  {{ tts_alarm_message_above }}
+                {% else %}
+                  {{ tts_alarm_message_below }}
+                {% endif %}
+              language: "{{ tts_language }}"
 
   # Telegram
   - if: "{{ enable_telegram }}"
