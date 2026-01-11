@@ -646,9 +646,9 @@ action:
           # TTS hlášení
           - if: "{{ enable_media_player and has_media_players }}"
             then:
-              - service: "{{ tts_service }}"
+              - service: !input tts_service
+                target: !input media_player_entities
                 data:
-                  entity_id: "{{ media_player_entities_raw.entity_id }}"
                   message: "{{ tts_alarm_message }}"
 
           # ==========================================
@@ -666,7 +666,7 @@ action:
                         filename: "/config/www/fire_alarm_{{ repeat.item.split('.')[1] }}_{{ now().strftime('%Y%m%d_%H%M%S') }}.jpg"
 
                     # Odeslání přes Telegram
-                    - service: "{{ telegram_service }}"
+                    - service: !input telegram_service
                       data:
                         message: ""
                         data:
@@ -681,7 +681,7 @@ action:
           # Telegram (základní zpráva)
           - if: "{{ enable_telegram }}"
             then:
-              - service: "{{ telegram_service }}"
+              - service: !input telegram_service
                 data:
                   message: "{{ telegram_alarm_final }}"
 
