@@ -533,6 +533,15 @@ action:
     value_template: "{{ alarm_sensors != '' }}"
 
   # ==========================================
+  # TELEGRAM TEXTOVÁ ZPRÁVA - OKAMŽITĚ (první věc!)
+  # ==========================================
+  - if: "{{ enable_telegram }}"
+    then:
+      - service: !input telegram_service
+        data:
+          message: "{{ telegram_alarm_final }}"
+
+  # ==========================================
   # NOVÉ: OKAMŽITÉ VYPNUTÍ SPOTŘEBIČŮ
   # ==========================================
   - if: "{{ enable_appliance_shutdown and has_appliances }}"
@@ -652,9 +661,9 @@ action:
                   message: "{{ tts_alarm_message }}"
 
           # ==========================================
-          # NOVÉ: Camera Snapshots + Telegram
+          # NOVÉ: Camera Snapshots + Telegram FOTKY
           # ==========================================
-          - if: "{{ enable_camera_snapshot and enable_telegram and has_cameras }}"
+          - if: "{{ enable_camera_snapshot and has_cameras }}"
             then:
               - repeat:
                   for_each: "{{ camera_entity_ids }}"
@@ -663,31 +672,30 @@ action:
                     - variables:
                         snapshot_ts: "{{ now().strftime('%Y%m%d_%H%M%S') }}"
 
-                    # Pořízení snapshotů
+                    # Pořízení snapshotů do separátní složky
                     - service: camera.snapshot
                       data:
                         entity_id: "{{ repeat.item }}"
-                        filename: "/config/www/fire_alarm_{{ repeat.item.split('.')[1] }}_{{ snapshot_ts }}.jpg"
+                        filename: "/config/www/fire_snapshots/{{ repeat.item.split('.')[1] }}_{{ snapshot_ts }}.jpg"
 
-                    # Odeslání přes Telegram
-                    - service: !input telegram_service
-                      data:
-                        message: ""
-                        data:
-                          photo:
-                            - file: "/config/www/fire_alarm_{{ repeat.item.split('.')[1] }}_{{ snapshot_ts }}.jpg"
-                          caption: "🔥 POŽÁRNÍ POPLACH - {{ state_attr(repeat.item, 'friendly_name') or repeat.item }}"
+                    # Počkat než se soubor uloží
+                    - delay:
+                        seconds: 2
+
+                    # Odeslání přes Telegram (pokud je zapnutý)
+                    - if: "{{ enable_telegram }}"
+                      then:
+                        - service: !input telegram_service
+                          data:
+                            message: ""
+                            data:
+                              photo:
+                                - file: "/config/www/fire_snapshots/{{ repeat.item.split('.')[1] }}_{{ snapshot_ts }}.jpg"
+                              caption: "🔥 POŽÁRNÍ POPLACH - {{ state_attr(repeat.item, 'friendly_name') or repeat.item }}"
 
                     # Delay mezi snapshoty
                     - delay:
                         seconds: "{{ camera_snapshot_delay }}"
-
-          # Telegram (základní zpráva)
-          - if: "{{ enable_telegram }}"
-            then:
-              - service: !input telegram_service
-                data:
-                  message: "{{ telegram_alarm_final }}"
 
           # Mobile
           - if: "{{ enable_mobile }}"
