@@ -92,11 +92,10 @@ blueprint:
     camera_entities:
       name: Camera Entities
       description: Select cameras to capture snapshots (OPTIONAL - can be empty)
-      default: []
+      default: {}
       selector:
-        entity:
-          multiple: true
-          filter:
+        target:
+          entity:
             - domain: camera
 
     camera_snapshot_delay:
@@ -392,12 +391,15 @@ variables:
       {{ include }}
     {% endif %}
 
-  # NOVÉ: Normalizace camera entities
+  # NOVÉ: Normalizace camera entities z target selectoru
   camera_entity_ids: >
-    {% if camera_entities_raw is string %}
-      {{ [camera_entities_raw] }}
-    {% elif camera_entities_raw is iterable and camera_entities_raw is not mapping %}
-      {{ camera_entities_raw }}
+    {% set cameras = camera_entities_raw %}
+    {% if cameras is mapping and cameras.entity_id is defined %}
+      {% if cameras.entity_id is string %}
+        {{ [cameras.entity_id] }}
+      {% else %}
+        {{ cameras.entity_id }}
+      {% endif %}
     {% else %}
       []
     {% endif %}
