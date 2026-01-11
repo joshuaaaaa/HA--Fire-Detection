@@ -24,7 +24,7 @@ blueprint:
         entity:
           multiple: true
           filter:
-            - device_class: temperature
+            - domain: sensor
 
     minimum_duration:
       name: Minimum Duration Above Threshold
