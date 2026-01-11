@@ -311,12 +311,10 @@ variables:
       0
     {% endif %}
 
-# STATE TRIGGER - reaguje na změnu senzorů s minimum duration
+# TIME PATTERN TRIGGER - kontroluje každou minutu
 trigger:
-  - platform: state
-    entity_id: !input include
-    for:
-      seconds: !input minimum_duration
+  - platform: time_pattern
+    minutes: "/1"
 
 # PODMÍNKA: Alarm zapnutý + teplota mimo práh + cooldown
 condition:
@@ -333,6 +331,14 @@ condition:
          (cooldown_minutes | int * 60) }}
 
 action:
+  # Počkat minimum_duration a zkontrolovat znovu
+  - delay:
+      seconds: !input minimum_duration
+
+  # Zkontrolovat že stále platí alarm
+  - condition: template
+    value_template: "{{ sensor_count | int > 0 }}"
+
   # ==========================================
   # AUTOMATICKÉ AKCE
   # ==========================================
