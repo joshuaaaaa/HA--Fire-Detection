@@ -240,12 +240,13 @@ blueprint:
           entity:
             domain: media_player
 
-    tts_service:
-      name: TTS Service
-      description: Text-to-speech service to use
-      default: tts.google_translate_say
+    tts_engine:
+      name: TTS Engine
+      description: Text-to-speech engine entity (e.g., tts.home_assistant_cloud, tts.google_en_com)
+      default: tts.home_assistant_cloud
       selector:
-        text:
+        entity:
+          domain: tts
 
     tts_alarm_message_above:
       name: TTS Message (Above Threshold)
@@ -310,7 +311,7 @@ variables:
   # TTS inputs
   enable_media_player: !input enable_media_player
   media_player_entities_raw: !input media_player_entities
-  tts_service: !input tts_service
+  tts_engine: !input tts_engine
   tts_alarm_message_above: !input tts_alarm_message_above
   tts_alarm_message_below: !input tts_alarm_message_below
   tts_language: !input tts_language
@@ -474,34 +475,22 @@ action:
   # NOTIFIKACE
   # ==========================================
 
-  # TTS hlášení
+  # TTS hlášení (moderní tts.speak syntaxe)
   - if: "{{ enable_media_player and has_media_players }}"
     then:
-      - choose:
-          # Cloud TTS (bez language parametru)
-          - conditions: "{{ 'cloud' in tts_service }}"
-            sequence:
-              - service: "{{ tts_service }}"
-                data:
-                  entity_id: "{{ media_player_entities_raw.entity_id }}"
-                  message: >
-                    {% if threshold_mode == 'above' %}
-                      {{ tts_alarm_message_above }}
-                    {% else %}
-                      {{ tts_alarm_message_below }}
-                    {% endif %}
-        # Ostatní TTS služby (s language parametrem)
-        default:
-          - service: "{{ tts_service }}"
-            data:
-              entity_id: "{{ media_player_entities_raw.entity_id }}"
-              message: >
-                {% if threshold_mode == 'above' %}
-                  {{ tts_alarm_message_above }}
-                {% else %}
-                  {{ tts_alarm_message_below }}
-                {% endif %}
-              language: "{{ tts_language }}"
+      - action: tts.speak
+        target:
+          entity_id: "{{ tts_engine }}"
+        data:
+          media_player_entity_id: "{{ media_player_entities_raw.entity_id }}"
+          message: >
+            {% if threshold_mode == 'above' %}
+              {{ tts_alarm_message_above }}
+            {% else %}
+              {{ tts_alarm_message_below }}
+            {% endif %}
+          language: "{{ tts_language }}"
+          cache: true
 
   # Telegram
   - if: "{{ enable_telegram }}"
