@@ -326,9 +326,12 @@ condition:
 
   - condition: template
     value_template: >
-      {{ this.last_triggered is none or
-         (now() - this.last_triggered).total_seconds() >
-         (cooldown_minutes | int * 60) }}
+      {% set last_trigger = state_attr(this.entity_id, 'last_triggered') %}
+      {% if last_trigger == none %}
+        true
+      {% else %}
+        {{ (as_timestamp(now()) - as_timestamp(last_trigger)) >= (cooldown_minutes * 60) }}
+      {% endif %}
 
 action:
   # Počkat minimum_duration a zkontrolovat znovu
