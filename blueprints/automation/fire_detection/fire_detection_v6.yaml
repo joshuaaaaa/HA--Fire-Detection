@@ -496,14 +496,9 @@ variables:
     **Max:** {{ max_temperature }}°C
     **Čas:** {{ now().strftime('%H:%M:%S %d.%m.%Y') }}
 
-# TRIGGER - reaguje na změnu teploty/kouře + pravidelná kontrola
+# TRIGGER - pravidelná kontrola (state trigger nefunguje s blueprint inputs)
 trigger:
-  # Okamžitá reakce při změně senzorů
-  - trigger: state
-    entity_id: !input include
-
-  # Pravidelná kontrola každých 10 sekund (backup + cooldown repeat)
-  - trigger: time_pattern
+  - platform: time_pattern
     seconds: "/10"
 
 # PODMÍNKA: Alarm zapnutý + teplota nad prahem + cooldown uplynul

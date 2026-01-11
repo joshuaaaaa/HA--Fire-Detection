@@ -411,14 +411,9 @@ variables:
     {{ temps | min | round(1) if temps | length > 0 else 0 }}
 
 
-# TRIGGER - reaguje na změnu teploty + pravidelná kontrola
+# TRIGGER - pravidelná kontrola (state trigger nefunguje s blueprint inputs)
 trigger:
-  # Okamžitá reakce při změně teploty
-  - trigger: state
-    entity_id: !input include
-
-  # Pravidelná kontrola každou minutu (backup + cooldown repeat)
-  - trigger: time_pattern
+  - platform: time_pattern
     minutes: "/1"
 
 # PODMÍNKA: Alarm zapnutý + teplota mimo práh + cooldown uplynul
