@@ -307,13 +307,12 @@ blueprint:
           entity:
             domain: media_player
 
-    tts_engine:
-      name: TTS Engine
-      description: Text-to-speech engine entity (e.g., tts.home_assistant_cloud, tts.google_en_com)
-      default: tts.home_assistant_cloud
+    tts_service:
+      name: TTS Service
+      description: Text-to-speech service (tts.cloud_say for Nabu Casa, tts.google_translate_say for Google)
+      default: tts.cloud_say
       selector:
-        entity:
-          domain: tts
+        text:
 
     tts_alarm_message:
       name: TTS Alarm Message
@@ -361,7 +360,7 @@ variables:
   # TTS inputs
   enable_media_player: !input enable_media_player
   media_player_entities_raw: !input media_player_entities
-  tts_engine: !input tts_engine
+  tts_service: !input tts_service
   tts_alarm_message: !input tts_alarm_message
   tts_language: !input tts_language
 
@@ -638,17 +637,13 @@ action:
 
           # Větev 2: Notifikace + Camera Snapshots
           - sequence:
-              # TTS hlášení (moderní tts.speak syntaxe)
+              # TTS hlášení
               - if: "{{ enable_media_player and has_media_players }}"
                 then:
-                  - action: tts.speak
-                    target:
-                      entity_id: "{{ tts_engine }}"
+                  - service: "{{ tts_service }}"
                     data:
-                      media_player_entity_id: "{{ media_player_entities_raw.entity_id }}"
+                      entity_id: "{{ media_player_entities_raw.entity_id }}"
                       message: "{{ tts_alarm_message }}"
-                      language: "{{ tts_language }}"
-                      cache: true
 
               # ==========================================
               # NOVÉ: Camera Snapshots + Telegram
