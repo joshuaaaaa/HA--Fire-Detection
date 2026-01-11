@@ -433,7 +433,8 @@ variables:
 
   # NOVÉ: Kontrola zda máme kamery
   has_cameras: >
-    {{ camera_entity_ids | length > 0 }}
+    {% set cameras = camera_entities_raw %}
+    {{ cameras is mapping and cameras.entity_id is defined and cameras.entity_id | length > 0 }}
 
   # ALARM: Senzory nad prahem
   alarm_sensors: >
