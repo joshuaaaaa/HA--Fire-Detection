@@ -659,11 +659,15 @@ action:
               - repeat:
                   for_each: "{{ camera_entity_ids }}"
                   sequence:
+                    # Vytvořit timestamp JEDNOU pro oba kroky
+                    - variables:
+                        snapshot_ts: "{{ now().strftime('%Y%m%d_%H%M%S') }}"
+
                     # Pořízení snapshotů
                     - service: camera.snapshot
                       data:
                         entity_id: "{{ repeat.item }}"
-                        filename: "/config/www/fire_alarm_{{ repeat.item.split('.')[1] }}_{{ now().strftime('%Y%m%d_%H%M%S') }}.jpg"
+                        filename: "/config/www/fire_alarm_{{ repeat.item.split('.')[1] }}_{{ snapshot_ts }}.jpg"
 
                     # Odeslání přes Telegram
                     - service: !input telegram_service
@@ -671,7 +675,7 @@ action:
                         message: ""
                         data:
                           photo:
-                            - file: "/config/www/fire_alarm_{{ repeat.item.split('.')[1] }}_{{ now().strftime('%Y%m%d_%H%M%S') }}.jpg"
+                            - file: "/config/www/fire_alarm_{{ repeat.item.split('.')[1] }}_{{ snapshot_ts }}.jpg"
                           caption: "🔥 POŽÁRNÍ POPLACH - {{ state_attr(repeat.item, 'friendly_name') or repeat.item }}"
 
                     # Delay mezi snapshoty
