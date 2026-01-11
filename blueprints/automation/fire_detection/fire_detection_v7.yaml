@@ -148,7 +148,7 @@ blueprint:
       selector:
         target:
           entity:
-            domain: light
+            - domain: light
 
     light_mode:
       name: Light Alarm Mode
@@ -305,7 +305,7 @@ blueprint:
       selector:
         target:
           entity:
-            domain: media_player
+            - domain: media_player
 
     tts_service:
       name: TTS Service
