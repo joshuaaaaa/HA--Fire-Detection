@@ -298,15 +298,15 @@ variables:
   sensor_count: "{{ violating_sensors | length }}"
 
   extreme_temp: >
-    {% set temps = [] %}
+    {% set ns = namespace(temps=[]) %}
     {% for s in include_entity_ids %}
       {% set val = states(s) | float(-999) %}
       {% if val != -999 %}
-        {% set temps = temps + [val] %}
+        {% set ns.temps = ns.temps + [val] %}
       {% endif %}
     {% endfor %}
-    {% if temps %}
-      {{ temps|max if threshold_mode == 'above' else temps|min }}
+    {% if ns.temps %}
+      {{ ns.temps|max if threshold_mode == 'above' else ns.temps|min }}
     {% else %}
       0
     {% endif %}
