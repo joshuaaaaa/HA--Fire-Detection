@@ -664,11 +664,11 @@ action:
                         # Odeslání přes Telegram
                         - service: "{{ telegram_service }}"
                           data:
-                            message: "📸 Kamera: {{ state_attr(repeat.item, 'friendly_name') or repeat.item }}"
+                            message: ""
                             data:
                               photo:
                                 - file: "/config/www/fire_alarm_{{ repeat.item.split('.')[1] }}_{{ now().strftime('%Y%m%d_%H%M%S') }}.jpg"
-                                  caption: "🔥 POŽÁRNÍ POPLACH - {{ state_attr(repeat.item, 'friendly_name') or repeat.item }}"
+                              caption: "🔥 POŽÁRNÍ POPLACH - {{ state_attr(repeat.item, 'friendly_name') or repeat.item }}"
 
                         # Delay mezi snapshoty
                         - delay:
