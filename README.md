@@ -11,16 +11,21 @@ Komplexní systém pro detekci požáru pomocí teplotních senzorů s automatic
 **Hlavní funkce:**
 - 🌡️ Multi-sensor teplotní monitoring s konfigurovatelným prahem
 - 🔌 Automatické vypínání nebezpečných spotřebičů při alarmu
-- 📸 Camera snapshots s odesláním do Telegramu
+- 📸 Camera snapshots s automatickým odesláním do Telegramu
+- 📁 Separátní složka pro fotky (`/config/www/fire_snapshots/`)
+- ⚡ Okamžité Telegram notifikace (text posílán hned, fotky následují)
 - 🚨 Vizuální alarmy (blikající světla, 3 režimy)
 - 📱 Multiple notification channels (Telegram, mobile, HA)
 - 📢 TTS hlášení přes reproduktory
 - 🔔 Sirény a zvukové alarmy
+- ⏱️ Konfigurovatelný delay mezi snapshoty (0-60 minut)
 
 **Instalace:**
 ```
-https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-blueprint-cx6Ql/blueprints/automation/fire_detection/fire_detection_v6.yaml
+https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-blueprint-cx6Ql/blueprints/automation/fire_detection/fire_detection_v7.yaml
 ```
+
+**⚠️ Důležité:** Před použitím vytvořte složku `/config/www/fire_snapshots/` pro ukládání fotografií z kamer.
 
 [📖 Kompletní dokumentace](./blueprints/automation/fire_detection/README.md) | [💡 Příklady](./examples/)
 
@@ -82,7 +87,21 @@ https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-bluep
 
 ## 🚀 Rychlý Start
 
-### 1. Import Blueprintu
+### 1. Příprava (pouze pro Fire Detection s kamerami)
+
+Pokud plánujete používat camera snapshots, vytvořte složku pro fotky:
+
+**Přes File Editor:**
+1. Otevřete **File Editor** v Home Assistant
+2. Přejděte do složky `/config/www/`
+3. Vytvořte novou složku s názvem `fire_snapshots`
+
+**Nebo přes SSH/Terminal:**
+```bash
+mkdir /config/www/fire_snapshots
+```
+
+### 2. Import Blueprintu
 
 1. Otevřete Home Assistant
 2. Přejděte do **Settings** → **Automations & Scenes** → **Blueprints**
@@ -90,7 +109,7 @@ https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-bluep
 4. Vložte URL blueprintu (viz výše)
 5. Klikněte **Preview** a **Import**
 
-### 2. Vytvoření Automatizace
+### 3. Vytvoření Automatizace
 
 1. Přejděte do **Automations & Scenes** → **Automations**
 2. Klikněte **Create Automation** → **Create from Blueprint**
@@ -98,7 +117,7 @@ https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-bluep
 4. Nakonfigurujte podle svých potřeb
 5. Uložte a otestujte
 
-### 3. Použijte Příklady
+### 4. Použijte Příklady
 
 Všechny blueprinty mají příklady v složce [`examples/`](./examples/). Zkopírujte, upravte a použijte!
 
@@ -116,16 +135,22 @@ Každý blueprint má vlastní detailní dokumentaci:
 ### Fire Detection Blueprint
 
 ```yaml
-# Základní požární ochrana
+# Základní požární ochrana s kamerami
 alias: Fire Detection - Basic Home
 use_blueprint:
-  path: fire_detection/fire_detection_v6.yaml
+  path: fire_detection/fire_detection_v7.yaml
   input:
     threshold: 60
     include:
       - sensor.kitchen_temperature
       - sensor.living_room_temperature
+    minimum_duration: 30
     enable_telegram: true
+    telegram_service: notify.telegram
+    enable_camera_snapshot: true
+    camera_entities:
+      entity_id: camera.kitchen
+    camera_snapshot_delay: 10
     enable_light_alarm: true
 ```
 
@@ -177,7 +202,8 @@ HA-Hori/
 ├── blueprints/
 │   └── automation/
 │       ├── fire_detection/
-│       │   ├── fire_detection_v6.yaml          # Fire Detection Blueprint
+│       │   ├── fire_detection_v7.yaml          # Fire Detection Blueprint (latest)
+│       │   ├── fire_detection_v6.yaml          # Fire Detection Blueprint (legacy)
 │       │   └── README.md                        # Dokumentace
 │       ├── temperature_alert/
 │       │   ├── temperature_alert.yaml           # Temperature Alert Blueprint
@@ -242,6 +268,21 @@ Pokud najdete problém:
 
 ### Q: Mohu modifikovat blueprinty?
 **A:** Ano! MIT licence umožňuje libovolné úpravy. Můžete si je přizpůsobit podle potřeby.
+
+### Q: Proč nepřichází fotky z kamer přes Telegram?
+**A:** Zkontrolujte:
+1. Je vytvořená složka `/config/www/fire_snapshots/`
+2. Je zapnutý toggle "Enable Camera Snapshots"
+3. Je zapnutý toggle "Enable Telegram Notifications"
+4. Je vybraná alespoň jedna kamera
+5. Telegram service je správně nakonfigurovaný (např. `notify.telegram`)
+
+### Q: Jaký je rozdíl mezi v6 a v7 Fire Detection Blueprintu?
+**A:** v7 má vylepšený workflow:
+- Telegram textová zpráva se posílá OKAMŽITĚ (nemusíte čekat na fotky)
+- Fotky se ukládají do separátní složky `/config/www/fire_snapshots/`
+- Přidán 2s delay mezi snapshot a odesláním (spolehlivější)
+- Kamery jsou nezávislé na světlech (fungují i když nejsou světla zapnutá)
 
 ## 📊 Statistiky
 
