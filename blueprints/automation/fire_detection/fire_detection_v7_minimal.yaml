@@ -2,7 +2,6 @@ blueprint:
   name: Fire Detection Blueprint v7 Minimal Test
   description: Minimal fire detection (testing)
   domain: automation
-  source_url: https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-blueprint-cx6Ql/blueprints/automation/fire_detection/fire_detection_v7_minimal.yaml
 
   input:
     threshold:
@@ -16,18 +15,18 @@ blueprint:
 
     include:
       name: Monitored Temperature Sensors
-      default:
-        entity_id: []
+      default: []
       selector:
-        target:
-          entity:
-            domain: sensor
+        entity:
+          domain: sensor
+          device_class: temperature
+          multiple: true
 
     telegram_service:
       name: Telegram Service
       default: notify.telegram
       selector:
-        text:
+        service:
 
 variables:
   threshold: !input threshold
@@ -36,12 +35,10 @@ variables:
 
   alarm_sensors: >
     {% set r = namespace(list=[]) %}
-    {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
-      {% if s.entity_id in include.entity_id
-         and s.state not in ['unknown','unavailable','none']
-         and (s.state is number or s.state | float(-999) != -999) %}
-        {% if s.state | float > threshold %}
-          {% set r.list = r.list + [s.name ~ ' (' ~ s.state ~ '°C)'] %}
+    {% for s in include %}
+      {% if states(s) not in ['unknown','unavailable','none'] %}
+        {% if states(s) | float > threshold %}
+          {% set r.list = r.list + [state_attr(s,'friendly_name') ~ ' (' ~ states(s) ~ '°C)'] %}
         {% endif %}
       {% endif %}
     {% endfor %}
