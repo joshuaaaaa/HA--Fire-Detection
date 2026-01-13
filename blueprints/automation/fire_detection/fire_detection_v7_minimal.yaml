@@ -15,11 +15,12 @@ blueprint:
 
     include:
       name: Monitored Temperature Sensors
-      default: []
+      default:
+        entity_id: []
       selector:
-        entity:
-          domain: sensor
-          multiple: true
+        target:
+          entity:
+            device_class: temperature
 
     telegram_service:
       name: Telegram Service
@@ -34,10 +35,12 @@ variables:
 
   alarm_sensors: >
     {% set r = namespace(list=[]) %}
-    {% for s in include %}
-      {% if states(s) not in ['unknown','unavailable','none'] %}
-        {% if states(s) | float > threshold %}
-          {% set r.list = r.list + [state_attr(s,'friendly_name') ~ ' (' ~ states(s) ~ '°C)'] %}
+    {% for state in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
+      {% if state.entity_id in include.entity_id %}
+        {% if state.state not in ['unknown','unavailable','none'] %}
+          {% if state.state | float > threshold %}
+            {% set r.list = r.list + [state.name ~ ' (' ~ state.state ~ '°C)'] %}
+          {% endif %}
         {% endif %}
       {% endif %}
     {% endfor %}
