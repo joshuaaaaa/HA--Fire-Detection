@@ -19,12 +19,11 @@ blueprint:
     include:
       name: Monitored Temperature Sensors
       description: Select temperature sensors to monitor for fire detection
-      default:
-        entity_id: []
       selector:
         target:
           entity:
             device_class: temperature
+      default: {}
 
     minimum_duration:
       name: Minimum Duration Above Threshold
@@ -214,7 +213,8 @@ blueprint:
       description: Telegram notification service to use
       default: notify.telegram
       selector:
-        text:
+        service:
+          domain: notify
 
     telegram_message:
       name: Telegram Alarm Message
@@ -241,7 +241,8 @@ blueprint:
       description: Mobile app notification service to use
       default: notify.mobile_app_phone
       selector:
-        text:
+        service:
+          domain: notify
 
     mobile_title:
       name: Mobile Alarm Title
@@ -312,7 +313,8 @@ blueprint:
       description: Text-to-speech service (tts.cloud_say for Nabu Casa, tts.google_translate_say for Google)
       default: tts.cloud_say
       selector:
-        text:
+        service:
+          domain: tts
 
     tts_alarm_message:
       name: TTS Alarm Message
