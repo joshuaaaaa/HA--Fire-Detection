@@ -19,12 +19,12 @@ blueprint:
     include:
       name: Monitored Temperature Sensors
       description: Select temperature sensors to monitor for fire detection
-      default: []
+      default:
+        entity_id: []
       selector:
-        entity:
-          multiple: true
-          filter:
-            - domain: sensor
+        target:
+          entity:
+            device_class: temperature
 
     minimum_duration:
       name: Minimum Duration Above Threshold
@@ -384,12 +384,14 @@ variables:
   camera_snapshot_delay: !input camera_snapshot_delay
   telegram_service: !input telegram_service
 
-  # Normalizace entity_id na vždy pole (array)
+  # Normalizace entity_id z target selectoru
   include_entity_ids: >
-    {% if include is string %}
-      {{ [include] }}
-    {% elif include is iterable and include is not mapping and include is not string %}
-      {{ include | list }}
+    {% if include is mapping and include.entity_id is defined %}
+      {% if include.entity_id is string %}
+        {{ [include.entity_id] }}
+      {% else %}
+        {{ include.entity_id | list }}
+      {% endif %}
     {% else %}
       []
     {% endif %}
