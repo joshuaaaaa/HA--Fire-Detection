@@ -384,18 +384,6 @@ variables:
   camera_snapshot_delay: !input camera_snapshot_delay
   telegram_service: !input telegram_service
 
-  # Normalizace entity_id z target selectoru
-  include_entity_ids: >
-    {% if include is mapping and include.entity_id is defined %}
-      {% if include.entity_id is string %}
-        {{ [include.entity_id] }}
-      {% else %}
-        {{ include.entity_id | list }}
-      {% endif %}
-    {% else %}
-      []
-    {% endif %}
-
   # NOVÉ: Normalizace camera entities z target selectoru
   camera_entity_ids: >
     {% set cameras = camera_entities_raw %}
@@ -408,10 +396,6 @@ variables:
     {% else %}
       []
     {% endif %}
-
-  # Bezpečnostní kontroly
-  has_entities: >
-    {{ include_entity_ids is defined and include_entity_ids | length > 0 }}
 
   alarm_enabled: >
     {% if alarm_control is string and alarm_control != '' %}
@@ -438,48 +422,42 @@ variables:
     {% set cameras = camera_entities_raw %}
     {{ cameras is mapping and cameras.entity_id is defined and cameras.entity_id | length > 0 }}
 
-  # ALARM: Senzory nad prahem
+  # ALARM: Senzory nad prahem (podle Low Temperature Detection blueprintu)
   alarm_sensors: >
     {% set r = namespace(list=[]) %}
-    {% if has_entities %}
-      {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
-        {% if s.entity_id in include_entity_ids
-           and s.state not in ['unknown','unavailable','none']
-           and (s.state is number or s.state | float(-999) != -999) %}
-          {% if s.state | float > threshold %}
-            {% set r.list = r.list + [s.name ~ ' (' ~ s.state ~ '°C)'] %}
-          {% endif %}
+    {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
+      {% if s.entity_id in include.entity_id
+         and s.state not in ['unknown','unavailable','none']
+         and (s.state is number or s.state | float(-999) != -999) %}
+        {% if s.state | float > threshold %}
+          {% set r.list = r.list + [s.name ~ ' (' ~ s.state ~ '°C)'] %}
         {% endif %}
-      {% endfor %}
-    {% endif %}
+      {% endif %}
+    {% endfor %}
     {{ r.list | join(', ') }}
 
   alarm_sensor_count: >
     {% set count = 0 %}
-    {% if has_entities %}
-      {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
-        {% if s.entity_id in include_entity_ids
-           and s.state not in ['unknown','unavailable','none']
-           and (s.state is number or s.state | float(-999) != -999) %}
-          {% if s.state | float > threshold %}
-            {% set count = count + 1 %}
-          {% endif %}
+    {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
+      {% if s.entity_id in include.entity_id
+         and s.state not in ['unknown','unavailable','none']
+         and (s.state is number or s.state | float(-999) != -999) %}
+        {% if s.state | float > threshold %}
+          {% set count = count + 1 %}
         {% endif %}
-      {% endfor %}
-    {% endif %}
+      {% endif %}
+    {% endfor %}
     {{ count }}
 
   max_temperature: >
     {% set temps = [] %}
-    {% if has_entities %}
-      {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
-        {% if s.entity_id in include_entity_ids
-           and s.state not in ['unknown','unavailable','none']
-           and (s.state is number or s.state | float(-999) != -999) %}
-          {% set temps = temps + [s.state | float] %}
-        {% endif %}
-      {% endfor %}
-    {% endif %}
+    {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
+      {% if s.entity_id in include.entity_id
+         and s.state not in ['unknown','unavailable','none']
+         and (s.state is number or s.state | float(-999) != -999) %}
+        {% set temps = temps + [s.state | float] %}
+      {% endif %}
+    {% endfor %}
     {{ temps | max | round(1) if temps | length > 0 else 0 }}
 
   # Zprávy
