@@ -482,18 +482,21 @@ variables:
     **Max:** {{ max_temperature }}°C
     **Čas:** {{ now().strftime('%H:%M:%S %d.%m.%Y') }}
 
-# TRIGGER - pravidelná kontrola každou minutu
+# TRIGGER - pravidelná kontrola každou minutu (podle Low Temperature Detection)
 trigger:
   - platform: time_pattern
     minutes: "/1"
 
-# PODMÍNKA: Alarm zapnutý + teplota nad prahem + cooldown uplynul
+# PODMÍNKA: POUZE kontrola zda jsou senzory nad prahem (podle Low Temperature Detection)
 condition:
   - condition: template
-    value_template: "{{ alarm_enabled }}"
-  - condition: template
     value_template: "{{ alarm_sensors != '' }}"
-  # Cooldown: Poslední alarm byl před >= cooldown_minutes
+
+action:
+  # Kontrola alarm_enabled a cooldown (UVNITŘ action, ne v condition!)
+  - condition: template
+    value_template: "{{ alarm_enabled }}"
+
   - condition: template
     value_template: >
       {% set last_trigger = state_attr(this.entity_id, 'last_triggered') %}
@@ -503,7 +506,6 @@ condition:
         {{ (as_timestamp(now()) - as_timestamp(last_trigger)) >= (cooldown_minutes * 60) }}
       {% endif %}
 
-action:
   # Počkat minimum_duration a zkontrolovat znovu
   - delay:
       seconds: !input minimum_duration
