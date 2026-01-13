@@ -21,7 +21,7 @@ blueprint:
       selector:
         target:
           entity:
-            device_class: temperature
+            - device_class: temperature
 
     telegram_service:
       name: Telegram Service
