@@ -1,0 +1,63 @@
+blueprint:
+  name: Fire Detection Blueprint v7 Minimal Test
+  description: Minimal fire detection (testing)
+  domain: automation
+  source_url: https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-blueprint-cx6Ql/blueprints/automation/fire_detection/fire_detection_v7_minimal.yaml
+
+  input:
+    threshold:
+      name: Fire Temperature Threshold
+      default: 60
+      selector:
+        number:
+          min: 20
+          max: 150
+          unit_of_measurement: "°C"
+
+    include:
+      name: Monitored Temperature Sensors
+      default:
+        entity_id: []
+      selector:
+        target:
+          entity:
+            device_class: temperature
+
+    telegram_service:
+      name: Telegram Service
+      default: notify.telegram
+      selector:
+        text:
+
+variables:
+  threshold: !input threshold
+  include: !input include
+  telegram_service: !input telegram_service
+
+  alarm_sensors: >
+    {% set r = namespace(list=[]) %}
+    {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
+      {% if s.entity_id in include.entity_id
+         and s.state not in ['unknown','unavailable','none']
+         and (s.state is number or s.state | float(-999) != -999) %}
+        {% if s.state | float > threshold %}
+          {% set r.list = r.list + [s.name ~ ' (' ~ s.state ~ '°C)'] %}
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+    {{ r.list | join(', ') }}
+
+trigger:
+  - platform: time_pattern
+    minutes: "/1"
+
+condition:
+  - condition: template
+    value_template: "{{ alarm_sensors != '' }}"
+
+action:
+  - service: !input telegram_service
+    data:
+      message: "🔥 POŽÁRNÍ POPLACH! Senzory: {{ alarm_sensors }}"
+
+mode: single
