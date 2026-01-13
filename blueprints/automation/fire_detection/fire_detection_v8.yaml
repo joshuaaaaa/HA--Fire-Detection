@@ -177,8 +177,7 @@ blueprint:
       name: Telegram Service
       default: notify.telegram
       selector:
-        service:
-          domain: notify
+        text:
 
     telegram_message:
       name: Telegram Message
@@ -199,8 +198,7 @@ blueprint:
       name: Mobile Service
       default: notify.mobile_app_phone
       selector:
-        service:
-          domain: notify
+        text:
 
     mobile_title:
       name: Mobile Title
@@ -256,8 +254,7 @@ blueprint:
       name: TTS Service
       default: tts.cloud_say
       selector:
-        service:
-          domain: tts
+        text:
 
     tts_alarm_message:
       name: TTS Message
