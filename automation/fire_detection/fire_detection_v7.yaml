@@ -376,6 +376,19 @@ variables:
   camera_snapshot_delay: !input camera_snapshot_delay
   telegram_service: !input telegram_service
 
+  # Normalizace media player entities
+  media_player_entities: >
+    {% set players = media_player_entities_raw %}
+    {% if players is mapping and players.entity_id is defined %}
+      {% if players.entity_id is string %}
+        {{ [players.entity_id] }}
+      {% else %}
+        {{ players.entity_id }}
+      {% endif %}
+    {% else %}
+      []
+    {% endif %}
+
   # Bezpečnostní kontroly
   alarm_enabled: >
     {% if alarm_control is string and alarm_control != '' %}
@@ -638,11 +651,9 @@ action:
               # TTS hlášení
               - if: "{{ enable_media_player and has_media_players }}"
                 then:
-                  - service: "{{ tts_service }}"
+                  - service: tts.cloud_say
                     target:
-                      device_id: "{{ media_player_entities_raw.device_id }}"
-                      entity_id: "{{ media_player_entities_raw.entity_id }}"
-                      area_id: "{{ media_player_entities_raw.area_id }}"
+                      entity_id: "{{ media_player_entities }}"
                     data:
                       message: "{{ tts_alarm_message }}"
 
