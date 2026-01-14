@@ -1,227 +1,69 @@
 blueprint:
-  name: Fire Detection Blueprint v7.1 FIXED
-  description: Fire detection with appliance shutdown, lights, sirens, camera snapshots and notifications
+  name: Fire Detection – Simple Threshold Check
+  description: >
+    Periodically checks selected temperature sensors and triggers actions
+    when any sensor exceeds the defined temperature threshold.
   domain: automation
-  source_url: https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/fire-detection/fire_detection_v7_1.yaml
 
   input:
     threshold:
-      name: Fire Temperature Threshold
+      name: Temperature Threshold
+      description: Temperature above which the alarm is triggered
       default: 60
       selector:
         number:
-          min: 20
+          min: -20
           max: 150
-          step: 0.5
-          unit_of_measurement: °C
+          step: 1
+          unit_of_measurement: "°C"
+          mode: slider
 
     include:
       name: Temperature Sensors
-      selector:
-        entity:
-          multiple: true
-          filter:
-            - domain: sensor
-              device_class: temperature
-
-    minimum_duration:
-      name: Minimum Duration Above Threshold
-      default: 30
-      selector:
-        number:
-          min: 0
-          max: 300
-          unit_of_measurement: seconds
-
-    cooldown_minutes:
-      name: Cooldown Minutes
-      default: 5
-      selector:
-        number:
-          min: 1
-          max: 60
-          unit_of_measurement: minutes
-
-    alarm_control:
-      name: Disable Alarm (input_boolean)
+      description: Select temperature sensors to monitor
       default:
-      selector:
-        entity:
-          domain: input_boolean
-
-    enable_telegram:
-      default: true
-      selector:
-        boolean:
-
-    telegram_service:
-      default: notify.telegram
-      selector:
-        text:
-
-    telegram_message:
-      default: |
-        🔥 POŽÁRNÍ POPLACH!
-      selector:
-        text:
-          multiline: true
-
-    enable_mobile:
-      default: false
-      selector:
-        boolean:
-
-    mobile_service:
-      default:
-      selector:
-        text:
-
-    mobile_title:
-      default: "🔥 Požární poplach"
-      selector:
-        text:
-
-    mobile_message:
-      default: "Detekována vysoká teplota!"
-      selector:
-        text:
-
-    enable_ha_notification:
-      default: false
-      selector:
-        boolean:
-
-    ha_notification_id:
-      default: fire_alarm
-      selector:
-        text:
-
-    ha_notification_title:
-      default: "🔥 Požární poplach"
-      selector:
-        text:
-
-    enable_appliance_shutdown:
-      default: false
-      selector:
-        boolean:
-
-    appliance_entities:
-      default:
+        entity_id: []
       selector:
         target:
           entity:
-            - domain: switch
-            - domain: light
-            - domain: climate
+            domain: sensor
+            device_class: temperature
 
-    enable_camera_snapshot:
-      default: false
+    actions:
+      name: Actions
+      description: >
+        Actions to run when threshold is exceeded.
+        Use {{ sensors }} to list triggered sensors.
       selector:
-        boolean:
-
-    camera_entities:
-      default:
-      selector:
-        target:
-          entity:
-            - domain: camera
-
-    camera_snapshot_delay:
-      default: 3
-      selector:
-        number:
-          min: 1
-          max: 60
-          unit_of_measurement: seconds
+        action: {}
 
 variables:
-  sensors: !input include
   threshold: !input threshold
+  include: !input include
 
-  alarm_enabled: >
-    {% if alarm_control %}
-      {{ is_state(alarm_control, 'off') }}
-    {% else %}
-      true
-    {% endif %}
-
-  active_sensors: >
-    {% set r = namespace(list=[]) %}
-    {% for s in sensors %}
-      {% if states(s) not in ['unknown','unavailable']
-         and states(s) | float > threshold %}
-        {% set r.list = r.list + [state_attr(s,'friendly_name') ~ ' (' ~ states(s) ~ '°C)'] %}
+  sensors: >
+    {% set result = namespace(list=[]) %}
+    {% for s in states.sensor
+         | selectattr('attributes.device_class', '==', 'temperature') %}
+      {% if s.entity_id in include.entity_id
+         and s.state not in ['unknown','unavailable']
+         and s.state | float > threshold %}
+        {% set result.list = result.list
+           + [s.name ~ ' (' ~ s.state ~ ' °C)'] %}
       {% endif %}
     {% endfor %}
-    {{ r.list }}
-
-  max_temp: >
-    {{ sensors | map('states') | map('float',0) | max }}
+    {{ result.list | join(', ') }}
 
 trigger:
   - platform: time_pattern
     minutes: "/1"
 
 condition:
-  - "{{ alarm_enabled }}"
-  - "{{ active_sensors | length > 0 }}"
   - condition: template
-    value_template: >
-      {% set last = state_attr(this.entity_id,'last_triggered') %}
-      {{ last == none or (as_timestamp(now()) - as_timestamp(last)) > cooldown_minutes*60 }}
+    value_template: "{{ sensors != '' }}"
 
 action:
-  - delay:
-      seconds: !input minimum_duration
+  - choose: []
+    default: !input actions
 
-  - condition: "{{ active_sensors | length > 0 }}"
-
-  - if: "{{ enable_telegram }}"
-    then:
-      - service: !input telegram_service
-        data:
-          message: >
-            {{ telegram_message }}
-            🌡 {{ active_sensors | join(', ') }}
-            🔥 Max {{ max_temp }}°C
-
-  - if: "{{ enable_appliance_shutdown }}"
-    then:
-      - service: homeassistant.turn_off
-        target: !input appliance_entities
-
-  - if: "{{ enable_camera_snapshot }}"
-    then:
-      - repeat:
-          for_each: "{{ camera_entities.entity_id }}"
-          sequence:
-            - service: camera.snapshot
-              data:
-                entity_id: "{{ repeat.item }}"
-                filename: "/config/www/fire_{{ repeat.index }}.jpg"
-            - delay:
-                seconds: !input camera_snapshot_delay
-            - service: !input telegram_service
-              data:
-                data:
-                  photo:
-                    - file: "/config/www/fire_{{ repeat.index }}.jpg"
-
-  - if: "{{ enable_mobile }}"
-    then:
-      - service: !input mobile_service
-        data:
-          title: !input mobile_title
-          message: !input mobile_message
-
-  - if: "{{ enable_ha_notification }}"
-    then:
-      - service: persistent_notification.create
-        data:
-          notification_id: !input ha_notification_id
-          title: !input ha_notification_title
-          message: "{{ active_sensors | join(', ') }}"
-
-mode: restart
-max_exceeded: silent
+mode: single
