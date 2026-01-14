@@ -246,8 +246,22 @@ variables:
   # TTS inputs
   enable_media_player: !input enable_media_player
   media_player_entities_raw: !input media_player_entities
+  tts_service: !input tts_service
   tts_alarm_message_above: !input tts_alarm_message_above
   tts_alarm_message_below: !input tts_alarm_message_below
+
+  # Normalizace media player entities
+  media_player_entities: >
+    {% set players = media_player_entities_raw %}
+    {% if players is mapping and players.entity_id is defined %}
+      {% if players.entity_id is string %}
+        {{ [players.entity_id] }}
+      {% else %}
+        {{ players.entity_id }}
+      {% endif %}
+    {% else %}
+      []
+    {% endif %}
 
   # Normalizace entity_id na vždy pole
   include_entity_ids: >
@@ -278,7 +292,11 @@ variables:
 
   has_media_players: >
     {% set players = media_player_entities_raw %}
-    {{ players is mapping and players.entity_id is defined and players.entity_id | length > 0 }}
+    {{ players is mapping and (
+      (players.entity_id is defined and players.entity_id | length > 0) or
+      (players.device_id is defined and players.device_id | length > 0) or
+      (players.area_id is defined and players.area_id | length > 0)
+    ) }}
 
   # ALARM: Senzory mimo práh
   violating_sensors: >
@@ -416,8 +434,9 @@ action:
       # TTS hlášení
       - if: "{{ enable_media_player and has_media_players }}"
         then:
-          - service: !input tts_service
-            target: !input media_player_entities
+          - service: tts.cloud_say
+            target:
+              entity_id: "{{ media_player_entities }}"
             data:
               message: "{{ tts_message_final }}"
 
