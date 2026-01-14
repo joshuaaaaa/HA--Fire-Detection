@@ -386,19 +386,35 @@ variables:
 
   has_light_entities: >
     {% set lights = light_entities_raw %}
-    {{ lights is mapping and lights.entity_id is defined and lights.entity_id | length > 0 }}
+    {{ lights is mapping and (
+      (lights.entity_id is defined and lights.entity_id | length > 0) or
+      (lights.device_id is defined and lights.device_id | length > 0) or
+      (lights.area_id is defined and lights.area_id | length > 0)
+    ) }}
 
   has_media_players: >
     {% set players = media_player_entities_raw %}
-    {{ players is mapping and players.entity_id is defined and players.entity_id | length > 0 }}
+    {{ players is mapping and (
+      (players.entity_id is defined and players.entity_id | length > 0) or
+      (players.device_id is defined and players.device_id | length > 0) or
+      (players.area_id is defined and players.area_id | length > 0)
+    ) }}
 
   has_appliances: >
     {% set appliances = appliance_entities_raw %}
-    {{ appliances is mapping and appliances.entity_id is defined and appliances.entity_id | length > 0 }}
+    {{ appliances is mapping and (
+      (appliances.entity_id is defined and appliances.entity_id | length > 0) or
+      (appliances.device_id is defined and appliances.device_id | length > 0) or
+      (appliances.area_id is defined and appliances.area_id | length > 0)
+    ) }}
 
   has_cameras: >
     {% set cameras = camera_entities_raw %}
-    {{ cameras is mapping and cameras.entity_id is defined and cameras.entity_id | length > 0 }}
+    {{ cameras is mapping and (
+      (cameras.entity_id is defined and cameras.entity_id | length > 0) or
+      (cameras.device_id is defined and cameras.device_id | length > 0) or
+      (cameras.area_id is defined and cameras.area_id | length > 0)
+    ) }}
 
   # Normalizace camera entities z target selectoru
   camera_entity_ids: >
