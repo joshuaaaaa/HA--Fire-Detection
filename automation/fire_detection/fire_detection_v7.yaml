@@ -1,6 +1,10 @@
 blueprint:
   name: Fire Detection Blueprint
-  description: Fire detection using time-based polling with appliance shutdown and camera snapshots
+  description: |
+    Fire detection using time-based polling with appliance shutdown and camera snapshots.
+    
+    **IMPORTANT:** Before using camera snapshots, create the folder manually:
+    `mkdir -p /config/www/fire_snapshots`
   domain: automation
   source_url: https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-blueprint-cx6Ql/blueprints/automation/fire_detection/fire_detection_v7.yaml
 
@@ -19,12 +23,12 @@ blueprint:
     include:
       name: Monitored Temperature Sensors
       description: Select temperature sensors to monitor for fire detection
-      default: []
+      default:
+        entity_id: []
       selector:
-        entity:
-          multiple: true
-          filter:
-            - domain: sensor
+        target:
+          entity:
+            device_class: temperature
 
     minimum_duration:
       name: Minimum Duration Above Threshold
@@ -37,17 +41,6 @@ blueprint:
           step: 5
           unit_of_measurement: seconds
 
-    cooldown_minutes:
-      name: Notification Cooldown
-      description: Minimum minutes between repeated alarm notifications
-      default: 5
-      selector:
-        number:
-          min: 1
-          max: 60
-          step: 1
-          unit_of_measurement: minutes
-
     alarm_control:
       name: Manual Alarm Control (Input Boolean)
       description: Optional input_boolean to manually disable alarm
@@ -57,7 +50,7 @@ blueprint:
           domain: input_boolean
 
     # ==========================================
-    # NOVÉ: Automatické vypínání spotřebičů
+    # Automatické vypínání spotřebičů
     # ==========================================
     enable_appliance_shutdown:
       name: Enable Automatic Appliance Shutdown
@@ -81,7 +74,7 @@ blueprint:
             - domain: humidifier
 
     # ==========================================
-    # NOVÉ: Camera snapshots
+    # Camera snapshots
     # ==========================================
     enable_camera_snapshot:
       name: Enable Camera Snapshots
@@ -342,7 +335,6 @@ variables:
   threshold: !input threshold
   include: !input include
   minimum_duration: !input minimum_duration
-  cooldown_minutes: !input cooldown_minutes
   alarm_control: !input alarm_control
 
   # Light alarm inputs
@@ -374,43 +366,17 @@ variables:
 
   enable_ha_notification: !input enable_ha_notification
 
-  # NOVÉ: Appliance shutdown inputs
+  # Appliance shutdown inputs
   enable_appliance_shutdown: !input enable_appliance_shutdown
   appliance_entities_raw: !input appliance_entities
 
-  # NOVÉ: Camera snapshot inputs
+  # Camera snapshot inputs
   enable_camera_snapshot: !input enable_camera_snapshot
   camera_entities_raw: !input camera_entities
   camera_snapshot_delay: !input camera_snapshot_delay
   telegram_service: !input telegram_service
 
-  # Normalizace entity_id na vždy pole (array)
-  include_entity_ids: >
-    {% if include is string %}
-      {{ [include] }}
-    {% elif include is iterable and include is not mapping and include is not string %}
-      {{ include | list }}
-    {% else %}
-      []
-    {% endif %}
-
-  # NOVÉ: Normalizace camera entities z target selectoru
-  camera_entity_ids: >
-    {% set cameras = camera_entities_raw %}
-    {% if cameras is mapping and cameras.entity_id is defined %}
-      {% if cameras.entity_id is string %}
-        {{ [cameras.entity_id] }}
-      {% else %}
-        {{ cameras.entity_id }}
-      {% endif %}
-    {% else %}
-      []
-    {% endif %}
-
   # Bezpečnostní kontroly
-  has_entities: >
-    {{ include_entity_ids is defined and include_entity_ids | length > 0 }}
-
   alarm_enabled: >
     {% if alarm_control is string and alarm_control != '' %}
       {{ is_state(alarm_control, 'on') }}
@@ -426,58 +392,69 @@ variables:
     {% set players = media_player_entities_raw %}
     {{ players is mapping and players.entity_id is defined and players.entity_id | length > 0 }}
 
-  # NOVÉ: Kontrola zda máme spotřebiče k vypnutí
   has_appliances: >
     {% set appliances = appliance_entities_raw %}
     {{ appliances is mapping and appliances.entity_id is defined and appliances.entity_id | length > 0 }}
 
-  # NOVÉ: Kontrola zda máme kamery
   has_cameras: >
     {% set cameras = camera_entities_raw %}
     {{ cameras is mapping and cameras.entity_id is defined and cameras.entity_id | length > 0 }}
 
+  # Normalizace camera entities z target selectoru
+  camera_entity_ids: >
+    {% set cameras = camera_entities_raw %}
+    {% if cameras is mapping and cameras.entity_id is defined %}
+      {% if cameras.entity_id is string %}
+        {{ [cameras.entity_id] }}
+      {% else %}
+        {{ cameras.entity_id }}
+      {% endif %}
+    {% else %}
+      []
+    {% endif %}
+
   # ALARM: Senzory nad prahem
   alarm_sensors: >
-    {% set r = namespace(list=[]) %}
-    {% if has_entities %}
-      {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
-        {% if s.entity_id in include_entity_ids
-           and s.state not in ['unknown','unavailable','none']
-           and (s.state is number or s.state | float(-999) != -999) %}
-          {% if s.state | float > threshold %}
-            {% set r.list = r.list + [s.name ~ ' (' ~ s.state ~ '°C)'] %}
-          {% endif %}
+    {% set result = namespace(sensors=[]) %}
+    {% for state in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
+      {% if state.state not in ['unknown','unavailable','none'] and state.state | float(-999) != -999 %}
+        {% if state.state | float > threshold and state.entity_id in include.entity_id %}
+          {% set result.sensors = result.sensors + [state.name ~ ' (' ~ state.state ~ '°C)'] %}
         {% endif %}
-      {% endfor %}
-    {% endif %}
-    {{ r.list | join(', ') }}
+      {% endif %}
+    {% endfor %}
+    {% for state in states.binary_sensor | selectattr('attributes.device_class', '==', 'temperature') | selectattr('state', '==', 'on') %}
+      {% if state.entity_id in include.entity_id %}
+        {% set result.sensors = result.sensors + [state.name] %}
+      {% endif %}
+    {% endfor %}
+    {{ result.sensors | join(', ') }}
 
   alarm_sensor_count: >
     {% set count = 0 %}
-    {% if has_entities %}
-      {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
-        {% if s.entity_id in include_entity_ids
-           and s.state not in ['unknown','unavailable','none']
-           and (s.state is number or s.state | float(-999) != -999) %}
-          {% if s.state | float > threshold %}
-            {% set count = count + 1 %}
-          {% endif %}
+    {% for state in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
+      {% if state.state not in ['unknown','unavailable','none'] and state.state | float(-999) != -999 %}
+        {% if state.state | float > threshold and state.entity_id in include.entity_id %}
+          {% set count = count + 1 %}
         {% endif %}
-      {% endfor %}
-    {% endif %}
+      {% endif %}
+    {% endfor %}
+    {% for state in states.binary_sensor | selectattr('attributes.device_class', '==', 'temperature') | selectattr('state', '==', 'on') %}
+      {% if state.entity_id in include.entity_id %}
+        {% set count = count + 1 %}
+      {% endif %}
+    {% endfor %}
     {{ count }}
 
   max_temperature: >
     {% set temps = [] %}
-    {% if has_entities %}
-      {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
-        {% if s.entity_id in include_entity_ids
-           and s.state not in ['unknown','unavailable','none']
-           and (s.state is number or s.state | float(-999) != -999) %}
-          {% set temps = temps + [s.state | float] %}
+    {% for state in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
+      {% if state.state not in ['unknown','unavailable','none'] and state.state | float(-999) != -999 %}
+        {% if state.entity_id in include.entity_id %}
+          {% set temps = temps + [state.state | float] %}
         {% endif %}
-      {% endfor %}
-    {% endif %}
+      {% endif %}
+    {% endfor %}
     {{ temps | max | round(1) if temps | length > 0 else 0 }}
 
   # Zprávy
@@ -507,223 +484,213 @@ trigger:
   - platform: time_pattern
     minutes: "/1"
 
-# PODMÍNKA: Alarm zapnutý + teplota nad prahem + cooldown uplynul
-condition:
-  - condition: template
-    value_template: "{{ alarm_enabled }}"
-  - condition: template
-    value_template: "{{ alarm_sensors != '' }}"
-  # Cooldown: Poslední alarm byl před >= cooldown_minutes
-  - condition: template
-    value_template: >
-      {% set last_trigger = state_attr(this.entity_id, 'last_triggered') %}
-      {% if last_trigger == none %}
-        true
-      {% else %}
-        {{ (as_timestamp(now()) - as_timestamp(last_trigger)) >= (cooldown_minutes * 60) }}
-      {% endif %}
-
+# ŽÁDNÉ PODMÍNKY - automatizace se vždy spustí každou minutu
 action:
-  # Počkat minimum_duration a zkontrolovat znovu
-  - delay:
-      seconds: !input minimum_duration
-
-  # Zkontrolovat že stále platí alarm
-  - condition: template
-    value_template: "{{ alarm_sensors != '' }}"
-
-  # ==========================================
-  # TELEGRAM TEXTOVÁ ZPRÁVA - OKAMŽITĚ (první věc!)
-  # ==========================================
-  - if: "{{ enable_telegram }}"
+  # Kontrola zda je alarm povolený a zda jsou senzory nad prahem
+  - if:
+      - condition: template
+        value_template: "{{ alarm_enabled and alarm_sensors != '' }}"
     then:
-      - service: !input telegram_service
-        data:
-          message: "{{ telegram_alarm_final }}"
+      # Počkat minimum_duration a zkontrolovat znovu
+      - delay:
+          seconds: !input minimum_duration
 
-  # ==========================================
-  # NOVÉ: OKAMŽITÉ VYPNUTÍ SPOTŘEBIČŮ
-  # ==========================================
-  - if: "{{ enable_appliance_shutdown and has_appliances }}"
-    then:
-      - service: homeassistant.turn_off
-        target: !input appliance_entities
-      - service: logbook.log
-        data:
-          name: "Fire Detection"
-          message: "Bezpečnostní vypnutí spotřebičů při požárním alarmu"
-          entity_id: "{{ appliance_entities_raw.entity_id if appliance_entities_raw.entity_id is defined else [] }}"
+      # Zkontrolovat že stále platí alarm
+      - condition: template
+        value_template: "{{ alarm_sensors != '' }}"
 
-  # Uložit stav světel
-  - if: "{{ enable_light_alarm and restore_lights and has_light_entities }}"
-    then:
-      - service: scene.create
-        data:
-          scene_id: fire_alarm_light_backup
-          snapshot_entities: >
-            {% if light_entities_raw.entity_id is string %}
-              {{ [light_entities_raw.entity_id] }}
-            {% else %}
-              {{ light_entities_raw.entity_id }}
-            {% endif %}
+      # ==========================================
+      # TELEGRAM TEXTOVÁ ZPRÁVA - OKAMŽITĚ
+      # ==========================================
+      - if: "{{ enable_telegram }}"
+        then:
+          - service: !input telegram_service
+            data:
+              message: "{{ telegram_alarm_final }}"
 
-  # Zapnout sirénu
-  - if: "{{ enable_sirens }}"
-    then:
-      - service: homeassistant.turn_on
-        target: !input siren_entities
+      # ==========================================
+      # OKAMŽITÉ VYPNUTÍ SPOTŘEBIČŮ
+      # ==========================================
+      - if: "{{ enable_appliance_shutdown and has_appliances }}"
+        then:
+          - service: homeassistant.turn_off
+            target: !input appliance_entities
+          - service: logbook.log
+            data:
+              name: "Fire Detection"
+              message: "Bezpečnostní vypnutí spotřebičů při požárním alarmu"
+              entity_id: "{{ appliance_entities_raw.entity_id if appliance_entities_raw.entity_id is defined else [] }}"
 
-  # Paralelní běh: světla + notifikace (nezávisle)
-  - parallel:
-      # Větev 1: Světelný alarm
-      - sequence:
-          - if: "{{ enable_light_alarm and has_light_entities }}"
-            then:
-              - choose:
-                  # Blikání
-                  - conditions: "{{ light_mode == 'blink' }}"
-                    sequence:
-                      - repeat:
-                          while:
-                            - condition: template
-                              value_template: "{{ alarm_sensors != '' }}"
-                          sequence:
-                            - service: light.turn_on
-                              target: !input light_entities
-                              data:
-                                rgb_color: "{{ light_color }}"
-                                brightness: "{{ light_brightness }}"
-                            - delay:
-                                seconds: "{{ blink_speed }}"
-                            - condition: template
-                              value_template: "{{ alarm_sensors != '' }}"
-                            - service: light.turn_off
-                              target: !input light_entities
-                            - delay:
-                                seconds: "{{ blink_speed }}"
+      # Uložit stav světel
+      - if: "{{ enable_light_alarm and restore_lights and has_light_entities }}"
+        then:
+          - service: scene.create
+            data:
+              scene_id: fire_alarm_light_backup
+              snapshot_entities: >
+                {% if light_entities_raw.entity_id is string %}
+                  {{ [light_entities_raw.entity_id] }}
+                {% else %}
+                  {{ light_entities_raw.entity_id }}
+                {% endif %}
 
-                  # Pulzování
-                  - conditions: "{{ light_mode == 'pulse' }}"
-                    sequence:
-                      - repeat:
-                          while:
-                            - condition: template
-                              value_template: "{{ alarm_sensors != '' }}"
-                          sequence:
-                            - service: light.turn_on
-                              target: !input light_entities
-                              data:
-                                rgb_color: "{{ light_color }}"
-                                brightness: "{{ light_brightness }}"
-                                transition: "{{ blink_speed }}"
-                            - delay:
-                                seconds: "{{ blink_speed }}"
-                            - condition: template
-                              value_template: "{{ alarm_sensors != '' }}"
-                            - service: light.turn_on
-                              target: !input light_entities
-                              data:
-                                rgb_color: "{{ light_color }}"
-                                brightness: "{{ (light_brightness * 0.2) | int }}"
-                                transition: "{{ blink_speed }}"
-                            - delay:
-                                seconds: "{{ blink_speed }}"
+      # Zapnout sirénu
+      - if: "{{ enable_sirens }}"
+        then:
+          - service: homeassistant.turn_on
+            target: !input siren_entities
 
-                  # Konstantní
-                  - conditions: "{{ light_mode == 'solid' }}"
-                    sequence:
-                      - service: light.turn_on
-                        target: !input light_entities
-                        data:
-                          rgb_color: "{{ light_color }}"
-                          brightness: "{{ light_brightness }}"
-                      - wait_template: "{{ alarm_sensors == '' }}"
+      # Paralelní běh: světla + notifikace
+      - parallel:
+          # Větev 1: Světelný alarm
+          - sequence:
+              - if: "{{ enable_light_alarm and has_light_entities }}"
+                then:
+                  - choose:
+                      # Blikání
+                      - conditions: "{{ light_mode == 'blink' }}"
+                        sequence:
+                          - repeat:
+                              while:
+                                - condition: template
+                                  value_template: "{{ alarm_sensors != '' }}"
+                              sequence:
+                                - service: light.turn_on
+                                  target: !input light_entities
+                                  data:
+                                    rgb_color: "{{ light_color }}"
+                                    brightness: "{{ light_brightness }}"
+                                - delay:
+                                    seconds: "{{ blink_speed }}"
+                                - condition: template
+                                  value_template: "{{ alarm_sensors != '' }}"
+                                - service: light.turn_off
+                                  target: !input light_entities
+                                - delay:
+                                    seconds: "{{ blink_speed }}"
 
-              # Obnovit světla po ukončení alarmu
-              - choose:
-                  - conditions: "{{ restore_lights }}"
-                    sequence:
-                      - service: scene.turn_on
-                        data:
-                          entity_id: scene.fire_alarm_light_backup
-                default:
-                  - service: light.turn_off
-                    target: !input light_entities
+                      # Pulzování
+                      - conditions: "{{ light_mode == 'pulse' }}"
+                        sequence:
+                          - repeat:
+                              while:
+                                - condition: template
+                                  value_template: "{{ alarm_sensors != '' }}"
+                              sequence:
+                                - service: light.turn_on
+                                  target: !input light_entities
+                                  data:
+                                    rgb_color: "{{ light_color }}"
+                                    brightness: "{{ light_brightness }}"
+                                    transition: "{{ blink_speed }}"
+                                - delay:
+                                    seconds: "{{ blink_speed }}"
+                                - condition: template
+                                  value_template: "{{ alarm_sensors != '' }}"
+                                - service: light.turn_on
+                                  target: !input light_entities
+                                  data:
+                                    rgb_color: "{{ light_color }}"
+                                    brightness: "{{ (light_brightness * 0.2) | int }}"
+                                    transition: "{{ blink_speed }}"
+                                - delay:
+                                    seconds: "{{ blink_speed }}"
 
-      # Větev 2: Notifikace + Camera Snapshots (nezávislé na světlech)
-      - sequence:
-          # TTS hlášení
-          - if: "{{ enable_media_player and has_media_players }}"
-            then:
-              - service: !input tts_service
-                target: !input media_player_entities
-                data:
-                  message: "{{ tts_alarm_message }}"
-
-          # ==========================================
-          # NOVÉ: Camera Snapshots + Telegram FOTKY
-          # ==========================================
-          - if: "{{ enable_camera_snapshot and has_cameras }}"
-            then:
-              - repeat:
-                  for_each: "{{ camera_entity_ids }}"
-                  sequence:
-                    # Vytvořit timestamp JEDNOU pro oba kroky
-                    - variables:
-                        snapshot_ts: "{{ now().strftime('%Y%m%d_%H%M%S') }}"
-
-                    # Pořízení snapshotů do separátní složky
-                    - service: camera.snapshot
-                      data:
-                        entity_id: "{{ repeat.item }}"
-                        filename: "/config/www/fire_snapshots/{{ repeat.item.split('.')[1] }}_{{ snapshot_ts }}.jpg"
-
-                    # Počkat než se soubor uloží
-                    - delay:
-                        seconds: 2
-
-                    # Odeslání přes Telegram (pokud je zapnutý)
-                    - if: "{{ enable_telegram }}"
-                      then:
-                        - service: !input telegram_service
-                          data:
-                            message: ""
+                      # Konstantní
+                      - conditions: "{{ light_mode == 'solid' }}"
+                        sequence:
+                          - service: light.turn_on
+                            target: !input light_entities
                             data:
-                              photo:
-                                - file: "/config/www/fire_snapshots/{{ repeat.item.split('.')[1] }}_{{ snapshot_ts }}.jpg"
-                              caption: "🔥 POŽÁRNÍ POPLACH - {{ state_attr(repeat.item, 'friendly_name') or repeat.item }}"
+                              rgb_color: "{{ light_color }}"
+                              brightness: "{{ light_brightness }}"
+                          - wait_template: "{{ alarm_sensors == '' }}"
+                            timeout: "01:00:00"
+                            continue_on_timeout: true
 
-                    # Delay mezi snapshoty
-                    - delay:
-                        seconds: "{{ camera_snapshot_delay }}"
+                  # Obnovit světla po ukončení alarmu
+                  - choose:
+                      - conditions:
+                          - "{{ restore_lights }}"
+                          - condition: template
+                            value_template: "{{ states('scene.fire_alarm_light_backup') not in ['unknown', 'unavailable'] }}"
+                        sequence:
+                          - service: scene.turn_on
+                            data:
+                              entity_id: scene.fire_alarm_light_backup
+                    default:
+                      - service: light.turn_off
+                        target: !input light_entities
 
-          # Mobile
-          - if: "{{ enable_mobile }}"
-            then:
-              - service: !input mobile_service
-                data:
-                  title: !input mobile_title
-                  message: "{{ mobile_alarm_final }}"
-                  data:
-                    channel: !input mobile_channel
-                    importance: high
-                    priority: high
-                    ttl: 0
-                    notification_icon: mdi:fire
+          # Větev 2: Notifikace + Camera Snapshots
+          - sequence:
+              # TTS hlášení
+              - if: "{{ enable_media_player and has_media_players }}"
+                then:
+                  - service: !input tts_service
+                    target: !input media_player_entities
+                    data:
+                      message: "{{ tts_alarm_message }}"
 
-          # HA persistent
-          - if: "{{ enable_ha_notification }}"
-            then:
-              - service: persistent_notification.create
-                data:
-                  notification_id: !input ha_notification_id
-                  title: !input ha_notification_title
-                  message: "{{ ha_alarm_final }}"
+              # ==========================================
+              # Camera Snapshots + Telegram FOTKY
+              # ==========================================
+              - if: "{{ enable_camera_snapshot and has_cameras }}"
+                then:
+                  - repeat:
+                      for_each: "{{ camera_entity_ids }}"
+                      sequence:
+                        - variables:
+                            snapshot_ts: "{{ now().strftime('%Y%m%d_%H%M%S') }}"
 
-          # Vlastní akce
-          - choose:
-              - conditions: "{{ true }}"
-                sequence: !input actions
+                        - service: camera.snapshot
+                          data:
+                            entity_id: "{{ repeat.item }}"
+                            filename: "/config/www/fire_snapshots/{{ repeat.item.split('.')[1] }}_{{ snapshot_ts }}.jpg"
+
+                        - delay:
+                            seconds: 2
+
+                        - if: "{{ enable_telegram }}"
+                          then:
+                            - service: !input telegram_service
+                              data:
+                                message: ""
+                                data:
+                                  photo:
+                                    - file: "/config/www/fire_snapshots/{{ repeat.item.split('.')[1] }}_{{ snapshot_ts }}.jpg"
+                                  caption: "🔥 POŽÁRNÍ POPLACH - {{ state_attr(repeat.item, 'friendly_name') or repeat.item }}"
+
+                        - delay:
+                            seconds: "{{ camera_snapshot_delay }}"
+
+              # Mobile
+              - if: "{{ enable_mobile }}"
+                then:
+                  - service: !input mobile_service
+                    data:
+                      title: !input mobile_title
+                      message: "{{ mobile_alarm_final }}"
+                      data:
+                        channel: !input mobile_channel
+                        importance: high
+                        priority: high
+                        ttl: 0
+                        notification_icon: mdi:fire
+
+              # HA persistent
+              - if: "{{ enable_ha_notification }}"
+                then:
+                  - service: persistent_notification.create
+                    data:
+                      notification_id: !input ha_notification_id
+                      title: !input ha_notification_title
+                      message: "{{ ha_alarm_final }}"
+
+              # Vlastní akce
+              - choose:
+                  - conditions: "{{ true }}"
+                    sequence: !input actions
 
 mode: restart
 max_exceeded: silent
