@@ -24,8 +24,7 @@ blueprint:
       selector:
         entity:
           multiple: true
-          filter:
-            - domain: sensor
+          domain: sensor
 
     actions:
       name: Actions

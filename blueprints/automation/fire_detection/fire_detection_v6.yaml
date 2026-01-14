@@ -23,8 +23,7 @@ blueprint:
       selector:
         entity:
           multiple: true
-          filter:
-            - domain: sensor
+          domain: sensor
 
     minimum_duration:
       name: Minimum Duration Above Threshold
