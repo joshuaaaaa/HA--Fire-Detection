@@ -1,0 +1,394 @@
+blueprint:
+  name: Blink/Flash Device Controller
+  description: Automatically turn devices on/off in intervals - perfect for blinking lights, pulsing switches, or rhythmic control
+  domain: automation
+  source_url: https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-blueprint-cx6Ql/blueprints/automation/blink_flash/blink_flash.yaml
+
+  input:
+    target_entities:
+      name: Target Entities
+      description: Select devices to blink/flash (lights, switches, fans, etc.)
+      selector:
+        target:
+          entity:
+            - domain: light
+            - domain: switch
+            - domain: fan
+            - domain: siren
+
+    trigger_entity:
+      name: Trigger Entity (Optional)
+      description: Entity that triggers the blinking (e.g., input_boolean, binary_sensor). Leave empty for manual trigger.
+      default: {}
+      selector:
+        entity:
+          multiple: false
+
+    trigger_state:
+      name: Trigger State
+      description: State that starts blinking (e.g., 'on', 'off', 'home', 'open')
+      default: "on"
+      selector:
+        text:
+
+    on_interval:
+      name: ON Interval
+      description: How long devices stay ON (in seconds)
+      default: 0.5
+      selector:
+        number:
+          min: 0.1
+          max: 3600
+          step: 0.1
+          unit_of_measurement: seconds
+
+    off_interval:
+      name: OFF Interval
+      description: How long devices stay OFF (in seconds)
+      default: 0.5
+      selector:
+        number:
+          min: 0.1
+          max: 3600
+          step: 0.1
+          unit_of_measurement: seconds
+
+    duration_mode:
+      name: Duration Mode
+      description: How long should blinking continue
+      default: unlimited
+      selector:
+        select:
+          options:
+            - label: Neomezeno (dokud trigger nezmění stav)
+              value: unlimited
+            - label: Časově omezeno
+              value: limited
+            - label: Počet opakování
+              value: count
+
+    duration_time:
+      name: Duration Time
+      description: How long to blink (used when Duration Mode = Časově omezeno)
+      default: 60
+      selector:
+        number:
+          min: 1
+          max: 86400
+          step: 1
+          unit_of_measurement: seconds
+
+    repeat_count:
+      name: Repeat Count
+      description: Number of blink cycles (used when Duration Mode = Počet opakování)
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 1000
+          step: 1
+
+    end_state:
+      name: End State
+      description: State of devices after blinking stops
+      default: "off"
+      selector:
+        select:
+          options:
+            - label: Vypnout (OFF)
+              value: "off"
+            - label: Zapnout (ON)
+              value: "on"
+            - label: Obnovit původní stav
+              value: restore
+
+    light_brightness:
+      name: Light Brightness (Optional)
+      description: Brightness for lights when ON (1-255). Leave 0 to keep current brightness.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 255
+          step: 1
+
+    light_color:
+      name: Light Color (Optional)
+      description: RGB color for lights. Only used if brightness is set.
+      default: [255, 255, 255]
+      selector:
+        color_rgb:
+
+    condition_entity:
+      name: Condition Entity (Optional)
+      description: Optional entity that must be in specific state for blinking to work
+      default: {}
+      selector:
+        entity:
+          multiple: false
+
+    condition_state:
+      name: Condition State
+      description: Required state of condition entity (e.g., 'on', 'home')
+      default: "on"
+      selector:
+        text:
+
+variables:
+  target_entities: !input target_entities
+  trigger_entity: !input trigger_entity
+  trigger_state: !input trigger_state
+  on_interval: !input on_interval
+  off_interval: !input off_interval
+  duration_mode: !input duration_mode
+  duration_time: !input duration_time
+  repeat_count: !input repeat_count
+  end_state: !input end_state
+  light_brightness: !input light_brightness
+  light_color: !input light_color
+  condition_entity: !input condition_entity
+  condition_state: !input condition_state
+
+  has_trigger: >
+    {{ trigger_entity is defined and trigger_entity != '' and trigger_entity is string }}
+
+  has_condition: >
+    {{ condition_entity is defined and condition_entity != '' and condition_entity is string }}
+
+  use_light_settings: >
+    {{ light_brightness > 0 }}
+
+  # Zjistit jestli cílové entity obsahují světla
+  has_lights: >
+    {% set entities = target_entities %}
+    {% if entities is mapping and entities.entity_id is defined %}
+      {% set entity_list = entities.entity_id if entities.entity_id is iterable and entities.entity_id is not string else [entities.entity_id] %}
+      {{ entity_list | select('match', '^light\.') | list | length > 0 }}
+    {% else %}
+      false
+    {% endif %}
+
+trigger:
+  - platform: state
+    entity_id: !input trigger_entity
+    to: !input trigger_state
+
+condition:
+  - condition: template
+    value_template: >
+      {% if has_condition %}
+        {{ is_state(condition_entity, condition_state) }}
+      {% else %}
+        true
+      {% endif %}
+
+action:
+  # Uložit původní stav pro případné obnovení
+  - if: "{{ end_state == 'restore' }}"
+    then:
+      - service: scene.create
+        data:
+          scene_id: blink_flash_backup
+          snapshot_entities: >
+            {% set entities = target_entities %}
+            {% if entities is mapping and entities.entity_id is defined %}
+              {% if entities.entity_id is string %}
+                {{ [entities.entity_id] }}
+              {% else %}
+                {{ entities.entity_id }}
+              {% endif %}
+            {% else %}
+              []
+            {% endif %}
+
+  # REŽIM: Neomezené blikání
+  - choose:
+      - conditions: "{{ duration_mode == 'unlimited' and has_trigger }}"
+        sequence:
+          - repeat:
+              while:
+                - condition: template
+                  value_template: "{{ is_state(trigger_entity, trigger_state) }}"
+                - condition: template
+                  value_template: >
+                    {% if has_condition %}
+                      {{ is_state(condition_entity, condition_state) }}
+                    {% else %}
+                      true
+                    {% endif %}
+              sequence:
+                # Zapnout
+                - choose:
+                    - conditions: "{{ use_light_settings and has_lights }}"
+                      sequence:
+                        - service: homeassistant.turn_on
+                          target: !input target_entities
+                          data:
+                            brightness: "{{ light_brightness }}"
+                            rgb_color: "{{ light_color }}"
+                  default:
+                    - service: homeassistant.turn_on
+                      target: !input target_entities
+
+                # Čekat ON interval
+                - delay:
+                    seconds: "{{ on_interval }}"
+
+                # Zkontrolovat jestli máme pokračovat
+                - condition: template
+                  value_template: "{{ is_state(trigger_entity, trigger_state) }}"
+                - condition: template
+                  value_template: >
+                    {% if has_condition %}
+                      {{ is_state(condition_entity, condition_state) }}
+                    {% else %}
+                      true
+                    {% endif %}
+
+                # Vypnout
+                - service: homeassistant.turn_off
+                  target: !input target_entities
+
+                # Čekat OFF interval
+                - delay:
+                    seconds: "{{ off_interval }}"
+
+      # REŽIM: Časově omezené blikání
+      - conditions: "{{ duration_mode == 'limited' }}"
+        sequence:
+          - repeat:
+              while:
+                - condition: template
+                  value_template: >
+                    {{ (as_timestamp(now()) - as_timestamp(state_attr(this.entity_id, 'last_triggered'))) < duration_time }}
+                - condition: template
+                  value_template: >
+                    {% if has_trigger %}
+                      {{ is_state(trigger_entity, trigger_state) }}
+                    {% else %}
+                      true
+                    {% endif %}
+                - condition: template
+                  value_template: >
+                    {% if has_condition %}
+                      {{ is_state(condition_entity, condition_state) }}
+                    {% else %}
+                      true
+                    {% endif %}
+              sequence:
+                # Zapnout
+                - choose:
+                    - conditions: "{{ use_light_settings and has_lights }}"
+                      sequence:
+                        - service: homeassistant.turn_on
+                          target: !input target_entities
+                          data:
+                            brightness: "{{ light_brightness }}"
+                            rgb_color: "{{ light_color }}"
+                  default:
+                    - service: homeassistant.turn_on
+                      target: !input target_entities
+
+                - delay:
+                    seconds: "{{ on_interval }}"
+
+                # Vypnout
+                - service: homeassistant.turn_off
+                  target: !input target_entities
+
+                - delay:
+                    seconds: "{{ off_interval }}"
+
+      # REŽIM: Počet opakování
+      - conditions: "{{ duration_mode == 'count' }}"
+        sequence:
+          - repeat:
+              count: "{{ repeat_count }}"
+              sequence:
+                # Zkontrolovat podmínky před každým cyklem
+                - condition: template
+                  value_template: >
+                    {% if has_trigger %}
+                      {{ is_state(trigger_entity, trigger_state) }}
+                    {% else %}
+                      true
+                    {% endif %}
+                - condition: template
+                  value_template: >
+                    {% if has_condition %}
+                      {{ is_state(condition_entity, condition_state) }}
+                    {% else %}
+                      true
+                    {% endif %}
+
+                # Zapnout
+                - choose:
+                    - conditions: "{{ use_light_settings and has_lights }}"
+                      sequence:
+                        - service: homeassistant.turn_on
+                          target: !input target_entities
+                          data:
+                            brightness: "{{ light_brightness }}"
+                            rgb_color: "{{ light_color }}"
+                  default:
+                    - service: homeassistant.turn_on
+                      target: !input target_entities
+
+                - delay:
+                    seconds: "{{ on_interval }}"
+
+                # Zkontrolovat jestli máme pokračovat
+                - condition: template
+                  value_template: >
+                    {% if has_trigger %}
+                      {{ is_state(trigger_entity, trigger_state) }}
+                    {% else %}
+                      true
+                    {% endif %}
+                - condition: template
+                  value_template: >
+                    {% if has_condition %}
+                      {{ is_state(condition_entity, condition_state) }}
+                    {% else %}
+                      true
+                    {% endif %}
+
+                # Vypnout
+                - service: homeassistant.turn_off
+                  target: !input target_entities
+
+                # Nečekat OFF interval při posledním opakování
+                - if: "{{ repeat.index < repeat_count }}"
+                  then:
+                    - delay:
+                        seconds: "{{ off_interval }}"
+
+  # Konečný stav po ukončení blikání
+  - choose:
+      - conditions: "{{ end_state == 'on' }}"
+        sequence:
+          - choose:
+              - conditions: "{{ use_light_settings and has_lights }}"
+                sequence:
+                  - service: homeassistant.turn_on
+                    target: !input target_entities
+                    data:
+                      brightness: "{{ light_brightness }}"
+                      rgb_color: "{{ light_color }}"
+            default:
+              - service: homeassistant.turn_on
+                target: !input target_entities
+
+      - conditions: "{{ end_state == 'off' }}"
+        sequence:
+          - service: homeassistant.turn_off
+            target: !input target_entities
+
+      - conditions: "{{ end_state == 'restore' }}"
+        sequence:
+          - service: scene.turn_on
+            data:
+              entity_id: scene.blink_flash_backup
+
+mode: restart
+max_exceeded: silent
