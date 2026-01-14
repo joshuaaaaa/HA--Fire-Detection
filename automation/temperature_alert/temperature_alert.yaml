@@ -2,7 +2,7 @@ blueprint:
   name: Temperature Threshold Alert Blueprint
   description: Universal temperature monitoring with alerts for both high (fire) and low (freeze) temperatures
   domain: automation
-  source_url: https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-blueprint-cx6Ql/blueprints/automation/temperature_alert/temperature_alert.yaml
+  source_url: https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/main/automation/temperature_alert/temperature_alert.yaml
 
   input:
     # ==========================================
@@ -401,7 +401,6 @@ action:
             {% endif %}
 
             🌡️ Senzory: {{ violating_sensors | join(', ') }}
-            📊 Hodnota: {{ extreme_temp }}°C (práh: {{ threshold }}°C)
             ⏰ {{ now().strftime('%d.%m.%Y %H:%M:%S') }}
 
   # HA persistent
@@ -420,9 +419,7 @@ action:
             **Teplotní alarm!**
 
             **Režim:** {% if threshold_mode == 'above' %}Nad prahem{% else %}Pod prahem{% endif %}
-            **Práh:** {{ threshold }}°C
             **Senzory:** {{ violating_sensors | join(', ') }}
-            **Hodnota:** {{ extreme_temp }}°C
             **Čas:** {{ now().strftime('%d.%m.%Y %H:%M:%S') }}
 
   # Vlastní akce

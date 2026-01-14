@@ -6,7 +6,7 @@ blueprint:
     **IMPORTANT:** Before using camera snapshots, create the folder manually:
     `mkdir -p /config/www/fire_snapshots`
   domain: automation
-  source_url: https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/claude/fire-detection-blueprint-cx6Ql/blueprints/automation/fire_detection/fire_detection_v7.yaml
+  source_url: https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/main/automation/fire_detection/fire_detection_v7.yaml
 
   input:
     threshold:
@@ -462,21 +462,16 @@ variables:
     {{ telegram_message }}
 
     🌡️ Senzory: {{ alarm_sensors }}
-    📈 Počet: {{ alarm_sensor_count }}
-    🔥 Max: {{ max_temperature }}°C
     ⏰ {{ now().strftime('%H:%M:%S %d.%m.%Y') }}
 
   mobile_alarm_final: >
     {{ mobile_message }}
     Senzory: {{ alarm_sensors }}
-    Max: {{ max_temperature }}°C
 
   ha_alarm_final: >
     **Detekována vysoká teplota!**
 
     **Senzory:** {{ alarm_sensors }}
-    **Počet:** {{ alarm_sensor_count }}
-    **Max:** {{ max_temperature }}°C
     **Čas:** {{ now().strftime('%H:%M:%S %d.%m.%Y') }}
 
 # TRIGGER - pravidelná kontrola každou minutu
