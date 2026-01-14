@@ -1,0 +1,67 @@
+blueprint:
+  name: Low Temperature Detection
+  description: Detect if the temperature is too low on any sensor. Sends continuous notifications until manually disabled.
+  domain: automation
+  source_url: https://gist.github.com/RoyOpstals/014c41d7bf996e625718f66ca05fc156
+
+  input:
+    threshold:
+      name: Temperature Level Threshold
+      description: When the temperature goes below this threshold, the automation is triggered.
+      default: 10
+      selector:
+        number:
+          min: -45.0
+          max: 100.0
+          unit_of_measurement: "°C"
+          mode: slider
+          step: 1.0
+
+    include:
+      name: Included Sensors
+      description: Temperature sensors to include in detection. Select multiple sensors to monitor.
+      default: []
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - device_class: temperature
+
+    actions:
+      name: Actions
+      description: Notifications or similar to be run. {{sensors}} is replaced with the names of sensors with their current temperature.
+      selector:
+        action: {}
+
+variables:
+  threshold: !input threshold
+  include: !input include
+
+  # Kontrola entit, které jsou pod prahem
+  sensors: >
+    {% set result = namespace(sensors=[]) %}
+    {% for entity_id in include %}
+      {% set temp = states(entity_id) | float(-999) %}
+      {% if temp != -999 and temp < threshold %}
+        {% set sensor_name = state_attr(entity_id, 'friendly_name') | default(entity_id) %}
+        {% set result.sensors = result.sensors + [sensor_name ~ ' (' ~ temp ~ ' °C)'] %}
+      {% endif %}
+    {% endfor %}
+    {{ result.sensors | join(', ') }}
+
+# Spouští se každou minutu
+trigger:
+  - platform: time_pattern
+    minutes: "/1"
+
+# Podmínka: alespoň jeden senzor je pod prahem
+condition:
+  - condition: template
+    value_template: "{{ sensors != '' }}"
+
+# Akce: spustit notifikace
+action:
+  - choose: []
+    default: !input actions
+
+mode: single
