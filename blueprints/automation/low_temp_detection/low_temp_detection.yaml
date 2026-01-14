@@ -18,14 +18,14 @@ blueprint:
           step: 1.0
 
     include:
-      name: Included Sensors
-      description: Temperature sensors to include in detection. Select multiple sensors to monitor.
+      name: Monitored Temperature Sensors
+      description: Temperature sensors to monitor for low temperature detection
       default: []
       selector:
         entity:
           multiple: true
           filter:
-            - device_class: temperature
+            - domain: sensor
 
     actions:
       name: Actions
@@ -37,10 +37,20 @@ variables:
   threshold: !input threshold
   include: !input include
 
+  # Normalizace entity_id na vždy pole
+  include_entity_ids: >
+    {% if include is string %}
+      {{ [include] }}
+    {% elif include is iterable and include is not mapping and include is not string %}
+      {{ include | list }}
+    {% else %}
+      []
+    {% endif %}
+
   # Kontrola entit, které jsou pod prahem
   sensors: >
     {% set result = namespace(sensors=[]) %}
-    {% for entity_id in include %}
+    {% for entity_id in include_entity_ids %}
       {% set temp = states(entity_id) | float(-999) %}
       {% if temp != -999 and temp < threshold %}
         {% set sensor_name = state_attr(entity_id, 'friendly_name') | default(entity_id) %}
