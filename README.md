@@ -1,19 +1,8 @@
-# 🏠 HA-Hori - Home Assistant Blueprints Collection
+# 🏠 Home Assistant Blueprints Collection
 
 Sbírka užitečných a spolehlivých blueprintů pro Home Assistant. Každý blueprint je pečlivě navržen, otestován a dokumentován.
 
-## 🆕 Nedávná Vylepšení
 
-### ✨ Leden 2026 - Refactoring & Optimalizace
-- **Temperature Alert**: Kompletně přepsán podle Fire Detection vzoru
-  - ✅ Double-check logika pro robustnější detekci
-  - ✅ Pre-computed zprávy pro lepší výkon
-  - ✅ Restart mode pro okamžitou reakci
-  - ✅ Lepší logbook entries a audit trail
-- **Fire Detection**: Optimalizace zpráv
-  - ✅ Čistší notifikace bez zbytečných statistik
-  - ✅ Pre-computed zprávy pro rychlejší zpracování
-- **Všechny blueprinty**: Aktualizace na latest best practices
 
 ## 📦 Dostupné Blueprinty
 
