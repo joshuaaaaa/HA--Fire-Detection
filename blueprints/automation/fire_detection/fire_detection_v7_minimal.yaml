@@ -18,7 +18,7 @@ blueprint:
       selector:
         target:
           entity:
-            device_class: temperature
+            domain: sensor
       default: {}
 
     telegram_service:
