@@ -280,33 +280,32 @@ variables:
     {% set players = media_player_entities_raw %}
     {{ players is mapping and players.entity_id is defined and players.entity_id | length > 0 }}
 
-  # ALARM: Senzory mimo práh
+  # ALARM: Senzory mimo práh - zjednodušená logika
   violating_sensors: >
-    {% set ns = namespace(list=[]) %}
-    {% for s in include_entity_ids %}
-      {% set val = states(s) | float(-999) %}
-      {% if val != -999 %}
-        {% if threshold_mode == 'above' and val > threshold %}
-          {% set ns.list = ns.list + [state_attr(s,'friendly_name') ~ ' (' ~ val ~ '°C)'] %}
-        {% elif threshold_mode == 'below' and val < threshold %}
-          {% set ns.list = ns.list + [state_attr(s,'friendly_name') ~ ' (' ~ val ~ '°C)'] %}
+    {% set result = namespace(sensors=[]) %}
+    {% for entity_id in include_entity_ids %}
+      {% set temp = states(entity_id) | float(-999) %}
+      {% if temp != -999 %}
+        {% if (threshold_mode == 'above' and temp > threshold) or (threshold_mode == 'below' and temp < threshold) %}
+          {% set sensor_name = state_attr(entity_id, 'friendly_name') | default(entity_id) %}
+          {% set result.sensors = result.sensors + [sensor_name ~ ' (' ~ temp ~ '°C)'] %}
         {% endif %}
       {% endif %}
     {% endfor %}
-    {{ ns.list }}
+    {{ result.sensors }}
 
   sensor_count: "{{ violating_sensors | length }}"
 
   extreme_temp: >
-    {% set ns = namespace(temps=[]) %}
-    {% for s in include_entity_ids %}
-      {% set val = states(s) | float(-999) %}
-      {% if val != -999 %}
-        {% set ns.temps = ns.temps + [val] %}
+    {% set temps = namespace(list=[]) %}
+    {% for entity_id in include_entity_ids %}
+      {% set temp = states(entity_id) | float(-999) %}
+      {% if temp != -999 %}
+        {% set temps.list = temps.list + [temp] %}
       {% endif %}
     {% endfor %}
-    {% if ns.temps %}
-      {{ ns.temps|max if threshold_mode == 'above' else ns.temps|min }}
+    {% if temps.list %}
+      {{ temps.list | max if threshold_mode == 'above' else temps.list | min }}
     {% else %}
       0
     {% endif %}

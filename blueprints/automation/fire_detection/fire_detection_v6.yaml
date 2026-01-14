@@ -436,49 +436,37 @@ variables:
     {% set cameras = camera_entities_raw %}
     {{ cameras is mapping and cameras.entity_id is defined and cameras.entity_id | length > 0 }}
 
-  # ALARM: Senzory nad prahem
+  # ALARM: Senzory nad prahem - zjednodušená logika
   alarm_sensors: >
-    {% set r = namespace(list=[]) %}
-    {% if has_entities %}
-      {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
-        {% if s.entity_id in include_entity_ids
-           and s.state not in ['unknown','unavailable','none']
-           and (s.state is number or s.state | float(-999) != -999) %}
-          {% if s.state | float > threshold %}
-            {% set r.list = r.list + [s.name ~ ' (' ~ s.state ~ '°C)'] %}
-          {% endif %}
-        {% endif %}
-      {% endfor %}
-    {% endif %}
-    {{ r.list | join(', ') }}
+    {% set result = namespace(sensors=[]) %}
+    {% for entity_id in include_entity_ids %}
+      {% set temp = states(entity_id) | float(-999) %}
+      {% if temp != -999 and temp > threshold %}
+        {% set sensor_name = state_attr(entity_id, 'friendly_name') | default(entity_id) %}
+        {% set result.sensors = result.sensors + [sensor_name ~ ' (' ~ temp ~ ' °C)'] %}
+      {% endif %}
+    {% endfor %}
+    {{ result.sensors | join(', ') }}
 
   alarm_sensor_count: >
-    {% set count = 0 %}
-    {% if has_entities %}
-      {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
-        {% if s.entity_id in include_entity_ids
-           and s.state not in ['unknown','unavailable','none']
-           and (s.state is number or s.state | float(-999) != -999) %}
-          {% if s.state | float > threshold %}
-            {% set count = count + 1 %}
-          {% endif %}
-        {% endif %}
-      {% endfor %}
-    {% endif %}
-    {{ count }}
+    {% set count = namespace(value=0) %}
+    {% for entity_id in include_entity_ids %}
+      {% set temp = states(entity_id) | float(-999) %}
+      {% if temp != -999 and temp > threshold %}
+        {% set count.value = count.value + 1 %}
+      {% endif %}
+    {% endfor %}
+    {{ count.value }}
 
   max_temperature: >
-    {% set temps = [] %}
-    {% if has_entities %}
-      {% for s in states.sensor | selectattr('attributes.device_class', '==', 'temperature') %}
-        {% if s.entity_id in include_entity_ids
-           and s.state not in ['unknown','unavailable','none']
-           and (s.state is number or s.state | float(-999) != -999) %}
-          {% set temps = temps + [s.state | float] %}
-        {% endif %}
-      {% endfor %}
-    {% endif %}
-    {{ temps | max | round(1) if temps | length > 0 else 0 }}
+    {% set temps = namespace(list=[]) %}
+    {% for entity_id in include_entity_ids %}
+      {% set temp = states(entity_id) | float(-999) %}
+      {% if temp != -999 %}
+        {% set temps.list = temps.list + [temp] %}
+      {% endif %}
+    {% endfor %}
+    {{ temps.list | max | round(1) if temps.list | length > 0 else 0 }}
 
   # Zprávy
   telegram_alarm_final: >
