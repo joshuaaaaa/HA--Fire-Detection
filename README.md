@@ -207,117 +207,6 @@ use_blueprint:
     light_color: [255, 0, 0]
 ```
 
-## 🔧 Repository Structure
-
-```
-HA--Fire-Detection/
-├── README.md                                    # This file (English)
-├── README.cs.md                                 # Czech version
-├── LICENSE                                      # MIT License
-├── automation/                                  # Home Assistant Blueprints
-│   ├── fire_detection/
-│   │   └── fire_detection_v7.yaml              # Fire Detection Blueprint
-│   ├── temperature_alert/
-│   │   └── temperature_alert.yaml              # Temperature Alert Blueprint
-│   └── blink_flash/
-│       └── blink_flash.yaml                    # Blink/Flash Blueprint
-└── examples/                                    # Configuration examples
-    ├── basic_home_protection.yaml              # Fire: Basic protection
-    ├── full_protection_with_cameras.yaml       # Fire: Full protection
-    ├── night_mode_quiet.yaml                   # Fire: Night mode
-    ├── garage_workshop.yaml                    # Fire: Garage/workshop
-    ├── temperature_alert/
-    │   ├── freeze_alert_basic.yaml             # Temp: Basic freeze alert
-    │   ├── freeze_prevention_auto.yaml         # Temp: Auto heating
-    │   ├── overheat_alert.yaml                 # Temp: Overheat alert
-    │   └── pipe_freeze_prevention.yaml         # Temp: Pipe prevention
-    └── blink_flash/
-        ├── basic_blink.yaml                    # Blink: Basic
-        ├── alarm_flash.yaml                    # Blink: Alarm
-        ├── slow_pulse.yaml                     # Blink: Slow pulse
-        └── doorbell_count.yaml                 # Blink: Doorbell
-```
-
-## 🤝 Contributing
-
-Suggestions, bug reports, and pull requests are welcome!
-
-### How to contribute:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 🐛 Bug Reports
-
-If you find an issue:
-
-1. Check [Issues](https://github.com/joshuaaaaa/HA--Fire-Detection/issues) to see if it's already reported
-2. Create a new Issue with details:
-   - Blueprint you're using
-   - Home Assistant version
-   - Problem description
-   - Steps to reproduce
-   - Logs (if relevant)
-
-## ❓ FAQ
-
-### Q: Do blueprints work without internet?
-**A:** Yes, most features work locally. Exception: Telegram notifications require internet.
-
-### Q: Can I use multiple blueprints simultaneously?
-**A:** Yes! Blueprints are independent and you can have any number of them.
-
-### Q: How do I update a blueprint?
-**A:** Simply re-import the URL. HA automatically updates existing automations.
-
-### Q: Are blueprints compatible with all HA versions?
-**A:** Tested on HA 2024.1+. Older versions may have issues with some features.
-
-### Q: Can I modify blueprints?
-**A:** Yes! MIT license allows any modifications. You can customize them as needed.
-
-### Q: Why aren't camera photos coming through Telegram?
-**A:** Check:
-1. Is the folder `/config/www/fire_snapshots/` created
-2. Is the "Enable Camera Snapshots" toggle on
-3. Is the "Enable Telegram Notifications" toggle on
-4. Is at least one camera selected
-5. Is the Telegram service correctly configured (e.g., `notify.telegram`)
-
-### Q: What are the latest blueprint improvements?
-**A:** All blueprints were recently refactored:
-
-**Fire Detection v7:**
-- Telegram text message sent IMMEDIATELY (no waiting for photos)
-- Photos saved to separate folder `/config/www/fire_snapshots/`
-- Added 2s delay between snapshot and sending (more reliable)
-- Pre-computed messages for better performance
-- Restart mode for instant reaction
-
-**Temperature Alert (new):**
-- Double-check logic: CHECK → DELAY → RECHECK (more robust)
-- Pre-computed messages (telegram, HA, TTS)
-- Restart mode instead of single for better responsiveness
-- Cooldown check in variables for better performance
-- Logbook entries for audit trail
-- No top-level condition - everything handled in action (more flexible)
-
-## 📊 Statistics
-
-- **Number of blueprints**: 3
-- **Total examples**: 12
-- **Supported domains**: 15+ (light, switch, camera, sensor, climate, water_heater, fan, etc.)
-- **Languages**: English + Czech
-
-## 🔗 Useful Links
-
-- [Home Assistant](https://www.home-assistant.io/)
-- [Home Assistant Community](https://community.home-assistant.io/)
-- [Blueprint Documentation](https://www.home-assistant.io/docs/automation/using_blueprints/)
-- [YAML Guide](https://www.home-assistant.io/docs/configuration/yaml/)
 
 ## 📜 License
 
@@ -330,6 +219,13 @@ See [LICENSE](./LICENSE) for details.
 The **Fire Detection Blueprint** is intended as supplementary protection. It does not replace professional fire alarms, smoke detectors, and fire extinguishers. Always comply with local fire regulations and building codes.
 
 ---
+
+
+## http://buymeacoffee.com/jakubhruby
+
+
+<img width="150" height="150" alt="qr-code" src="https://github.com/user-attachments/assets/2581bf36-7f7d-4745-b792-d1abaca6e57d" />
+
 
 **Created with ❤️ for the Home Assistant community**
 
