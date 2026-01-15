@@ -2,7 +2,7 @@ blueprint:
   name: Blink/Flash Device Controller
   description: Automatically turn devices on/off in intervals - perfect for blinking lights, pulsing switches, or rhythmic control
   domain: automation
-  source_url: https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/main/automation/blink_flash/blink_flash.yaml
+  source_url: https://raw.githubusercontent.com/joshuaaaaa/HA--Fire-Detection/main/automation/blink_flash/blink_flash.yaml
 
   input:
     target_entities:

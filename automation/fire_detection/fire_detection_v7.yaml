@@ -6,7 +6,7 @@ blueprint:
     **IMPORTANT:** Before using camera snapshots, create the folder manually:
     `mkdir -p /config/www/fire_snapshots`
   domain: automation
-  source_url: https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/main/automation/fire_detection/fire_detection_v7.yaml
+  source_url: https://raw.githubusercontent.com/joshuaaaaa/HA--Fire-Detection/main/automation/fire_detection/fire_detection_v7.yaml
 
   input:
     threshold:
