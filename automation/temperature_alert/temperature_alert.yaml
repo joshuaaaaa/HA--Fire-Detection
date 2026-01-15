@@ -2,7 +2,7 @@ blueprint:
   name: Temperature Threshold Alert Blueprint
   description: Universal temperature monitoring with alerts for both high (fire) and low (freeze) temperatures
   domain: automation
-  source_url: https://raw.githubusercontent.com/joshuaaaaa/HA-Hori/main/automation/temperature_alert/temperature_alert.yaml
+  source_url: https://raw.githubusercontent.com/joshuaaaaa/HA--Fire-Detection/main/automation/temperature_alert/temperature_alert.yaml
 
   input:
     # ==========================================
