@@ -16,6 +16,7 @@ Komplexní systém pro detekci požáru pomocí teplotních senzorů s automatic
 - 📸 Camera snapshots s automatickým odesláním do Telegramu
 - 📁 Separátní složka pro fotky (`/config/www/fire_snapshots/`)
 - ⚡ Okamžité Telegram notifikace (text posílán hned, fotky následují)
+- 📲 Konfigurovatelný způsob odesílání Telegramu — volba mezi starším servisem `notify.*` a novějším `telegram_bot.send_message` / `send_photo`, s volitelnou notify entitou a message thread ID
 - 🚨 Vizuální alarmy (blikající světla, 3 režimy)
 - 📱 Multiple notification channels (Telegram, mobile, HA)
 - 📢 TTS hlášení přes reproduktory
