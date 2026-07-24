@@ -10,19 +10,21 @@ A collection of reliable and well-documented blueprints for Home Assistant. Each
 
 Comprehensive fire detection system using temperature sensors with automatic appliance shutdown and camera snapshot capabilities.
 
-**Key Features:**
-- 🌡️ Multi-sensor temperature monitoring with configurable threshold
-- 🔌 Automatic dangerous appliance shutdown on alarm
-- 📸 Camera snapshots with automatic Telegram delivery
-- 📁 Dedicated folder for photos (`/config/www/fire_snapshots/`)
-- ⚡ Instant Telegram notifications (text sent immediately, photos follow)
-- 🚨 Visual alarms (flashing lights, 3 modes)
-- 📱 Multiple notification channels (Telegram, mobile, HA)
-- 📢 TTS announcements via speakers
-- 🔔 Sirens and audio alarms
-- ⏱️ Configurable delay between snapshots (0-60 minutes)
-- 🔄 Restart mode for instant reaction to new triggers
-- 📝 Pre-computed messages for better performance
+## Key Features
+
+- 🌡️ **Multi-sensor temperature monitoring** with configurable threshold
+- 🔌 **Automatic dangerous appliance shutdown** on alarm
+- 📸 **Camera snapshots** with automatic Telegram delivery
+- 📁 **Dedicated folder for photos** (`/config/www/fire_snapshots/`)
+- ⚡ **Instant Telegram notifications** (text sent immediately, photos follow)
+- 📲 **Configurable Telegram delivery method** — choose between the legacy `notify.*` service or the newer `telegram_bot.send_message` / `send_photo`, with a selectable notify entity and message thread ID
+- 🚨 **Visual alarms** (flashing lights, 3 modes)
+- 📱 **Multiple notification channels** (Telegram, mobile, HA)
+- 📢 **TTS announcements** via speakers
+- 🔔 **Sirens and audio alarms**
+- ⏱️ **Configurable delay between snapshots** (0-60 minutes)
+- 🔄 **Restart mode** for instant reaction to new triggers
+- 📝 **Pre-computed messages** for better performance
 
 **Installation:**
 ```
